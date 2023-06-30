@@ -1,8 +1,6 @@
 import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
 import Map from './Map'
 import * as L from "leaflet"
-// import "./map.css"
-import {renderToString} from "react-dom/server"
 import Marker, { createMarker } from './Marker'
 
 
