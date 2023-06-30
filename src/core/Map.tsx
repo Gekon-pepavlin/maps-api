@@ -1,5 +1,5 @@
 import React, { Ref } from 'react'
-import "./map.css"
+// import "./map.css"
 
 export interface MapProps{
     style?: React.CSSProperties,
