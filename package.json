@@ -1,0 +1,29 @@
+{
+  "name": "maps-api",
+  "version": "1.0.1",
+  "description": "",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "rimraf ./lib && tsc",
+    "start": "npm run build&& node lib/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gekon-pepavlin/maps-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gekon-pepavlin/maps-api/issues"
+  },
+  "homepage": "https://github.com/Gekon-pepavlin/maps-api#readme",
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "rimraf": "^5.0.1"
+  }
+}
