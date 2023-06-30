@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2021",      
-    "module": "commonjs",                             
+    "module": "commonjs",    
+    "jsx": "react",                         
             
     "esModuleInterop": true, 
     "forceConsistentCasingInFileNames": true,   

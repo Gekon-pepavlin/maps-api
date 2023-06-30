@@ -1,0 +1,10 @@
+.marker-div{
+}
+
+.throughInteractable{
+    pointer-events: none;
+}
+
+.throughInteractable > *{
+    pointer-events: auto;
+}
