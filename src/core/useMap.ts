@@ -7,7 +7,9 @@ import Marker, { createMarker } from './Marker'
 export default function useMap() {
     const divRef = useRef(null);
   
-    const mapRef = useRef<L.Map>(null)
+    const mapRef = useRef<L.Map>(null);
+
+    const markers : Marker[] = [];
 
     const container = useMemo(()=>Map(divRef), []);
     // Initialize map and set to the state
@@ -37,10 +39,16 @@ export default function useMap() {
     },[])
 
     const addMarker = ( marker: Marker) => {
-        if(mapRef.current) marker.attachMap(mapRef.current);
+        
+        if(!mapRef.current) return marker;
+        
+        marker.attachMap(mapRef.current);
+        markers.push(marker);
+
 
         return marker;
     }
+
 
     const createMarkerAndAdd = (latitude: number, longitude: number, marker: (marker: Marker, map: L.Map)=>React.ReactElement) => {
         const m = createMarker(latitude, longitude, marker) ;
