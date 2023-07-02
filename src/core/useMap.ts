@@ -59,6 +59,7 @@ export default function useMap() {
     return {
         container,
         createMarker: createMarkerAndAdd,
-        addMarker
+        addMarker,
+        markers
     }
 }
