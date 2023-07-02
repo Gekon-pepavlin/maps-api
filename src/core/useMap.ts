@@ -9,6 +9,8 @@ export default function useMap() {
   
     const mapRef = useRef<L.Map>(null);
 
+    const [ref, setRef] = useState<L.Map>();
+
     const markers : Marker[] = [];
 
     const container = useMemo(()=>Map(divRef), []);
@@ -34,6 +36,7 @@ export default function useMap() {
 
             //@ts-ignore
             mapRef.current = map;
+            setRef(map);
 
         }catch{} // Because map was creating twice on same div
     },[])
@@ -61,6 +64,6 @@ export default function useMap() {
         createMarker: createMarkerAndAdd,
         addMarker,
         markers,
-        manage: mapRef.current as L.Map
+        ref: ref as L.Map
     }
 }
