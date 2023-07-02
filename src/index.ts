@@ -1,7 +1,6 @@
 import useMap from "./core/useMap"
 import MarkerLayer from './core/MarkerLayer';
 import Marker from "./core/Marker";
-import {Map} from "leaflet"
+import { MapOptions } from './core/Marker';
 
-export {useMap, Marker, MarkerLayer};
-export type{Map}
+export {useMap, Marker, MarkerLayer, MapOptions};

@@ -1,15 +1,15 @@
 import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
 import Map from './Map'
 import * as L from "leaflet"
-import Marker, { createMarker } from './Marker'
+import Marker, { MapOptions, createMarker } from './Marker'
 
 
 export default function useMap() {
     const divRef = useRef(null);
   
-    const mapRef = useRef<L.Map>(null);
+    const mapRef = useRef<MapOptions>(null);
 
-    const [ref, setRef] = useState<L.Map>();
+    const [ref, setRef] = useState<MapOptions>();
 
     const [markers, setMarkers] = useState<Marker[]>([]);
 
@@ -53,7 +53,7 @@ export default function useMap() {
     }
 
 
-    const createMarkerAndAdd = (latitude: number, longitude: number, marker: (marker: Marker, map: L.Map)=>React.ReactElement) => {
+    const createMarkerAndAdd = (latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement) => {
         const m = createMarker(latitude, longitude, marker) ;
         addMarker( m);
         return m;
@@ -64,6 +64,6 @@ export default function useMap() {
         createMarker: createMarkerAndAdd,
         addMarker,
         markers,
-        ref: ref as L.Map
+        ref: ref as MapOptions
     }
 }
