@@ -4,9 +4,10 @@
 		{
 			"type": "npm",
 			"script": "start",
+			"path": "app",
 			"problemMatcher": [],
-			"label": "npm: start",
-			"detail": "npm run build&& node lib/index.js",
+			"label": "npm: start - app",
+			"detail": "react-scripts start",
 			"group": {
 				"kind": "build",
 				"isDefault": true

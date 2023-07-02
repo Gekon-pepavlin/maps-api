@@ -9,8 +9,9 @@
     "strict": true,                             
     "skipLibCheck": true     ,
     
-    "outDir": "lib",                          
-    "rootDir": "src",   
-    "declaration": true                    
-  }
+    "outDir": "lib",       
+    "declaration": true,                    
+    "moduleResolution": "node",
+    "baseUrl": "."
+  },
 }

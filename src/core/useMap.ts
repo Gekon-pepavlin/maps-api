@@ -49,7 +49,7 @@ export default function useMap() {
         return marker;
     }
 
-    const createMarkerAndAdd = (latitude: number, longitude: number, marker: React.ReactElement) => {
+    const createMarkerAndAdd = (latitude: number, longitude: number, marker: (marker: Marker)=>React.ReactElement) => {
         const m = createMarker(latitude, longitude, marker) ;
         addMarker( m);
         return m;

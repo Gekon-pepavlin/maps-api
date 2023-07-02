@@ -1,6 +1,6 @@
 {
   "name": "maps-api",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -39,8 +39,11 @@
   "dependencies": {
     "@types/react": "^18.2.14",
     "leaflet": "^1.9.4",
-    "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rimraf": "^5.0.1"
+  },
+
+  "peerDependencies":{
+    "react": "^18.2.0"
   }
 }

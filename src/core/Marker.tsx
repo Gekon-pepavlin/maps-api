@@ -2,6 +2,8 @@ import L from 'leaflet';
 import React from 'react'
 import { renderToString } from 'react-dom/server';
 import MarkerLayer from './MarkerLayer';
+import ReactDOM from 'react-dom/client';
+
 
 export default class Marker{
     marker : L.Marker;
@@ -12,8 +14,11 @@ export default class Marker{
 
     isActive: boolean = false;
 
-    constructor(latitude: number, longitude: number, marker: React.ReactElement){
-        const html = renderToString(marker);
+    reactElement: React.ReactElement;
+
+    constructor(latitude: number, longitude: number, marker: (marker: Marker)=>React.ReactElement){
+        this.reactElement = marker(this);
+        const html = "<div></div>";//renderToString(marker);
 
         const size = 40;
         const icon  = L.divIcon({
@@ -45,13 +50,19 @@ export default class Marker{
         
         if(!this.map) return;
 
-        if( this.isActive ) this.marker.addTo( this.map );
+        if( this.isActive ){
+            const marker = this.marker.addTo( this.map );
+            // @ts-ignore
+            const htmlElement = marker._icon;
+            const htmlRoot = ReactDOM.createRoot(htmlElement);
+            htmlRoot.render(this.reactElement)
+        }
         else this.marker.removeFrom( this.map )
 
     }
 
 }
 
-export function createMarker(latitude: number, longitude: number, marker: React.ReactElement){
+export function createMarker(latitude: number, longitude: number, marker: (marker: Marker)=>React.ReactElement){
     return new Marker(latitude, longitude, marker);
 }
