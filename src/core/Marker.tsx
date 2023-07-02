@@ -1,4 +1,4 @@
-import L from 'leaflet';
+import L, { LatLngExpression } from 'leaflet';
 import React from 'react'
 import { renderToString } from 'react-dom/server';
 import MarkerLayer from './MarkerLayer';
@@ -6,19 +6,20 @@ import ReactDOM from 'react-dom/client';
 
 
 export default class Marker{
-    marker : L.Marker;
+    private marker : L.Marker;
 
+    position: LatLngExpression;
     layer: MarkerLayer | undefined;
 
     map: L.Map | undefined;
 
     isActive: boolean = false;
 
-    reactElement: React.ReactElement;
+    reactElement: (marker: Marker, map: L.Map)=>React.ReactElement;
 
-    constructor(latitude: number, longitude: number, marker: (marker: Marker)=>React.ReactElement){
-        this.reactElement = marker(this);
-        const html = "<div></div>";//renderToString(marker);
+    constructor(latitude: number, longitude: number, marker: (marker: Marker, map: L.Map)=>React.ReactElement){
+        this.reactElement = marker;
+        const html = "<div></div>";
 
         const size = 40;
         const icon  = L.divIcon({
@@ -27,6 +28,8 @@ export default class Marker{
             iconSize: [size,size],
             iconAnchor: [0,0]
         }); 
+
+        this.position = [latitude, longitude];
         this.marker = L.marker([latitude, longitude], {icon});
 
     }
@@ -55,7 +58,7 @@ export default class Marker{
             // @ts-ignore
             const htmlElement = marker._icon;
             const htmlRoot = ReactDOM.createRoot(htmlElement);
-            htmlRoot.render(this.reactElement)
+            htmlRoot.render(this.reactElement(this, this.map))
         }
         else this.marker.removeFrom( this.map )
 
@@ -63,6 +66,6 @@ export default class Marker{
 
 }
 
-export function createMarker(latitude: number, longitude: number, marker: (marker: Marker)=>React.ReactElement){
+export function createMarker(latitude: number, longitude: number, marker: (marker: Marker, map: L.Map)=>React.ReactElement){
     return new Marker(latitude, longitude, marker);
 }

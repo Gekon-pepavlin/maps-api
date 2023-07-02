@@ -18,7 +18,6 @@ export default function useMap() {
         };
         try{
             const map = L.map(divRef.current, {zoomControl: false});
-            
             map.setView(new L.LatLng(50.01942, 14.29694), 18);
         
             L.tileLayer.wms("https://geoportal.cuzk.cz/WMS_ORTOFOTO_PUB/WMService.aspx", {
@@ -37,19 +36,13 @@ export default function useMap() {
         }catch{} // Because map was creating twice on same div
     },[])
 
-
-    useEffect(()=>{
-
-        
-    },[mapRef.current])
-
     const addMarker = ( marker: Marker) => {
         if(mapRef.current) marker.attachMap(mapRef.current);
 
         return marker;
     }
 
-    const createMarkerAndAdd = (latitude: number, longitude: number, marker: (marker: Marker)=>React.ReactElement) => {
+    const createMarkerAndAdd = (latitude: number, longitude: number, marker: (marker: Marker, map: L.Map)=>React.ReactElement) => {
         const m = createMarker(latitude, longitude, marker) ;
         addMarker( m);
         return m;
