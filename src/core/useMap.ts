@@ -11,7 +11,7 @@ export default function useMap() {
 
     const [ref, setRef] = useState<L.Map>();
 
-    const markers : Marker[] = [];
+    const [markers, setMarkers] = useState<Marker[]>([]);
 
     const container = useMemo(()=>Map(divRef), []);
     // Initialize map and set to the state
@@ -46,7 +46,7 @@ export default function useMap() {
         if(!mapRef.current) return marker;
         
         marker.attachMap(mapRef.current);
-        markers.push(marker);
+        setMarkers((m)=>[...m, marker])
 
 
         return marker;
