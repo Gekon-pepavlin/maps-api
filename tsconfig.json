@@ -12,6 +12,8 @@
     "outDir": "lib",       
     "declaration": true,                    
     "moduleResolution": "node",
-    "baseUrl": "."
+    "baseUrl": ".",
+
+    "types": ["@types/node", "@types/leaflet"]
   },
 }
