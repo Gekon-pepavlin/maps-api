@@ -60,6 +60,7 @@ export default function useMap() {
         container,
         createMarker: createMarkerAndAdd,
         addMarker,
-        markers
+        markers,
+        map: mapRef.current as L.Map
     }
 }
