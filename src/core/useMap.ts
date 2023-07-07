@@ -2,6 +2,7 @@ import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
 import Map from './Map'
 import * as L from "leaflet"
 import Marker, { MapOptions, createMarker } from './Marker'
+import Geometry, { createGeometry } from './Geometry';
 
 
 export default function useMap() {
@@ -12,6 +13,7 @@ export default function useMap() {
     const [ref, setRef] = useState<MapOptions>();
 
     const [markers, setMarkers] = useState<Marker[]>([]);
+    const [geometries, setGeometries] = useState<Geometry[]>([]);
 
     const container = useMemo(()=>Map(divRef), []);
     // Initialize map and set to the state
@@ -52,6 +54,16 @@ export default function useMap() {
         return marker;
     }
 
+    const addGeometry = (geometry: Geometry) => {
+        if(!mapRef.current) return geometry;
+        
+        geometry.attachMap(mapRef.current);
+        setGeometries((m)=>[...m, geometry])
+
+
+        return geometry;
+    }
+
 
     const createMarkerAndAdd = (latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement) => {
         const m = createMarker(latitude, longitude, marker) ;
@@ -59,11 +71,20 @@ export default function useMap() {
         return m;
     }
 
+    const createGeometryAndAdd = (points: L.LatLngExpression[]) => {
+        const m = createGeometry(points) ;
+        addGeometry( m);
+        return m;
+    }
+
     return {
         container,
         createMarker: createMarkerAndAdd,
+        createGeometry: createGeometryAndAdd,
         addMarker,
+        addGeometry,
         markers,
+        geometries,
         ref: ref as MapOptions
     }
 }

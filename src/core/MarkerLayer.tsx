@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react'
 import Marker from './Marker';
+import Geometry from './Geometry';
 
 
 export default class MarkerLayer{
 
     markers: Marker[] = [];
+    geometries: Geometry[] = [];
     layers: MarkerLayer[] = [];
 
     // Parent layer
@@ -20,6 +22,9 @@ export default class MarkerLayer{
         this.isActive = isActive;
         
         this.markers.forEach((m)=>{
+            m.setActive(isActive);
+        });
+        this.geometries.forEach((m)=>{
             m.setActive(isActive);
         });
 
@@ -54,8 +59,13 @@ export default class MarkerLayer{
         this.markers.push(marker);
     }
 
+    _addGeometry(geometry: Geometry){
+        this.geometries.push(geometry);
+    }
+
     addToLayer(layer: MarkerLayer){
         layer.layers.push(this);
         this.layer = layer;
     }
+
 }
