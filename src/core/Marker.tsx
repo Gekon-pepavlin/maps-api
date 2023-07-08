@@ -16,7 +16,7 @@ export default class Marker{
 
     isActive: boolean = false;
 
-    reactElement: (marker: Marker, map: MapOptions)=>React.ReactElement;
+    private reactElement: (marker: Marker, map: MapOptions)=>React.ReactElement;
 
     constructor(latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement){
         this.reactElement = marker;
