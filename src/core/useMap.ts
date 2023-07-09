@@ -5,6 +5,10 @@ import Marker, { MapOptions, createMarker } from './Marker'
 import Geometry, { createGeometry } from './Geometry';
 
 
+export const projection = {
+    name: "EPSG:5514",
+    alias:"+proj=krovak +lat_0=49.5 +lon_0=24.83333333333333 +alpha=30.28813972222222 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel +towgs84=589,76,480,0,0,0,0 +units=m +no_defs"
+};
 export default function useMap() {
     const divRef = useRef(null);
   
@@ -17,10 +21,6 @@ export default function useMap() {
 
     const container = useMemo(()=>Map(divRef), []);
 
-    const proj = {
-        name: "EPSG:5514",
-        alias:"+proj=krovak +lat_0=49.5 +lon_0=24.83333333333333 +alpha=30.28813972222222 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel +towgs84=589,76,480,0,0,0,0 +units=m +no_defs"
-    };
     // Initialize map and set to the state
     useEffect(()=>{
         if(divRef.current === null){
@@ -28,7 +28,7 @@ export default function useMap() {
             return;
         };
         try{
-            var crs = new L.Proj.CRS(proj.name, proj.alias,{
+            var crs = new L.Proj.CRS(projection.name, projection.alias,{
                 origin: [-951499.37, -930499.37],
                 resolutions: [
                   4891.96999883583,
@@ -115,7 +115,7 @@ export default function useMap() {
         addGeometry,
         markers,
         geometries,
-        proj,
+        projection,
         ref: ref as MapOptions
     }
 }

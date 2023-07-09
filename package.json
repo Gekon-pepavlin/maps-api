@@ -37,8 +37,10 @@
     "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
+    "@types/proj4leaflet": "^1.0.7",
     "@types/react": "^18.2.14",
     "leaflet": "^1.9.4",
+    "proj4leaflet": "^1.0.2",
     "react-dom": "^18.2.0",
     "rimraf": "^5.0.1"
   },
