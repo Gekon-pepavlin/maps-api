@@ -61,6 +61,10 @@ export default class Geometry{
         return this.htmlElement as HTMLElement;
     }
 
+    getPolygon(){
+        return this.polygon;
+    }
+
     setStyle(style: L.PathOptions){
         this.polygon.setStyle(style);
     }
