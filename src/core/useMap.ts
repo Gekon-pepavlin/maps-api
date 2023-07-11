@@ -1,14 +1,12 @@
-import L from "leaflet";
-import { useEffect, useMemo, useRef, useState } from "react";
-import Geometry, { createGeometry } from "./Geometry";
-import Map from "./Map"
-import Marker, { createMarker, MapOptions } from "./Marker";
+import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
+import Map from './Map'
+import * as L from "leaflet"
+import Marker, { MapOptions, createMarker } from './Marker'
+import Geometry, { createGeometry } from './Geometry';
 import {} from "proj4leaflet"
 
-export const projection = {
-    name: "EPSG:5514",
-    alias:"+proj=krovak +lat_0=49.5 +lon_0=24.83333333333333 +alpha=30.28813972222222 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel +towgs84=589,76,480,0,0,0,0 +units=m +no_defs"
-};
+
+export const projection = L.CRS.EPSG3395;
 export default function useMap() {
     const divRef = useRef(null);
   
@@ -28,31 +26,10 @@ export default function useMap() {
             return;
         };
         try{
-            
-            var crs = new L.Proj.CRS(projection.name, projection.alias,{
-                origin: [-951499.37, -930499.37],
-                resolutions: [
-                  4891.96999883583,
-                  2445.98499994708,
-                  1222.99250010583,
-                  611.496250052917,
-                  305.748124894166,
-                  152.8740625,
-                  76.4370312632292,
-                  38.2185156316146,
-                  19.1092578131615,
-                  9.55462890525781,
-                  4.77731445262891,
-                  2.38865722657904,
-                  1.19432861315723,
-                  0.597164306578613,
-                  0.298582153289307
-                ]
-            });
 
             const map = L.map(divRef.current, {
                 zoomControl: false,
-                crs: crs
+                crs: projection
             
             });
             map.setView(new L.LatLng(50.01942, 14.29694), 18);
@@ -71,7 +48,9 @@ export default function useMap() {
             mapRef.current = map;
             setRef(map);
 
-        }catch{} // Because map was creating twice on same div
+        }catch(e){
+            console.log(e);
+        } // Because map was creating twice on same div
     },[])
 
     const addMarker = ( marker: Marker) => {
