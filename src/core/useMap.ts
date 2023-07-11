@@ -1,9 +1,9 @@
-import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
-import Map from './Map'
-import * as L from "leaflet"
-import Marker, { MapOptions, createMarker } from './Marker'
-import Geometry, { createGeometry } from './Geometry';
-
+import L from "leaflet";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Geometry, { createGeometry } from "./Geometry";
+import Map from "./Map"
+import Marker, { createMarker, MapOptions } from "./Marker";
+import {} from "proj4leaflet"
 
 export const projection = {
     name: "EPSG:5514",
@@ -28,6 +28,7 @@ export default function useMap() {
             return;
         };
         try{
+            
             var crs = new L.Proj.CRS(projection.name, projection.alias,{
                 origin: [-951499.37, -930499.37],
                 resolutions: [
