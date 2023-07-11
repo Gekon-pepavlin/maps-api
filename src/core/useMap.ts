@@ -6,7 +6,12 @@ import Geometry, { createGeometry } from './Geometry';
 import {} from "proj4leaflet"
 
 
-export const projection = L.CRS.EPSG3395;
+export const projection = {
+    code: 'EPSG:3857',
+    options: '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs',
+    crs: L.CRS.EPSG3857
+    
+};
 export default function useMap() {
     const divRef = useRef(null);
   
@@ -29,8 +34,7 @@ export default function useMap() {
 
             const map = L.map(divRef.current, {
                 zoomControl: false,
-                crs: projection
-            
+                crs: projection.crs
             });
             map.setView(new L.LatLng(50.01942, 14.29694), 18);
         
