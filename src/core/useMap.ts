@@ -4,15 +4,27 @@ import * as L from "leaflet"
 import Marker, { MapOptions, createMarker } from './Marker'
 import Geometry, { createGeometry } from './Geometry';
 import {} from "proj4leaflet"
+import { LocationPoint } from './LocationPoint';
 
 
-export const projection = {
-    code: 'EPSG:4326',
-    options: '+proj=longlat +datum=WGS84 +no_defs',
-    crs: L.CRS.EPSG4326
+export interface CustomProjection{
+    crs: L.CRS,
+    transform: (location: LocationPoint) => LocationPoint
+}
+
+interface UseMapProps extends CustomProjection{
+}
+
+export default function useMap(props? : UseMapProps ) {
     
-};
-export default function useMap() {
+    const projection = props;
+    const transform = projection?.transform || ((location: LocationPoint) => location);
+
+    const maxZoom = useMemo(()=> {
+        // @ts-ignore
+        return projection ? projection.crs.options.resolutions.length - 1 : 18}, [projection?.crs.options.resolutions]);
+
+
     const divRef = useRef(null);
   
     const mapRef = useRef<MapOptions>(null);
@@ -30,23 +42,31 @@ export default function useMap() {
             console.log("Div-reference is null");
             return;
         };
-        try{
+        
+        
 
+        try{
             const map = L.map(divRef.current, {
                 zoomControl: false,
-                crs: projection.crs
+                ...(projection === undefined ? {} : {
+                    crs: projection.crs
+                }),
+                maxZoom: maxZoom,
+
             });
-            map.setView(new L.LatLng(50.01942, 14.29694), 18);
-        
+            map.setView([50.018127619248084, 14.296341504868012], maxZoom/2);
+            
+
             L.tileLayer.wms("https://geoportal.cuzk.cz/WMS_ORTOFOTO_PUB/WMService.aspx", {
                 layers: "GR_ORTFOTORGB",
-                maxZoom : 20, 
+                maxZoom : maxZoom, 
                 styles: "",
                 format: "image/png",
                 transparent: true,
                 version: "1.3.0",
                 attribution: "ČÚZK"
             }).addTo(map);
+
 
             //@ts-ignore
             mapRef.current = map;
@@ -57,15 +77,7 @@ export default function useMap() {
         } // Because map was creating twice on same div
     },[])
 
-    const setProjection = (code :string, alias: string) => {
-        const crs = new L.Proj.CRS(code, alias);
-        if(mapRef.current) mapRef.current.options.crs = crs;
-
-        projection.code = code;
-        projection.options = alias;
-        projection.crs = crs;
-    }
-
+    // Add marker to the map and return it back
     const addMarker = ( marker: Marker) => {
         
         if(!mapRef.current) return marker;
@@ -76,7 +88,8 @@ export default function useMap() {
 
         return marker;
     }
-
+    
+    // Add geometry to the map and return it back
     const addGeometry = (geometry: Geometry) => {
         if(!mapRef.current) return geometry;
         
@@ -87,15 +100,19 @@ export default function useMap() {
         return geometry;
     }
 
-
     const createMarkerAndAdd = (latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement) => {
-        const m = createMarker(latitude, longitude, marker) ;
+        const loc = transform([latitude, longitude]);
+        const m = createMarker(loc[0], loc[1], marker) ;
         addMarker( m);
         return m;
     }
 
-    const createGeometryAndAdd = (points: L.LatLngExpression[]) => {
-        const m = createGeometry(points) ;
+    const createGeometryAndAdd = (points: LocationPoint[]) => {
+        
+        const m = createGeometry(points.map((p)=>{
+            const loc = transform(p);
+            return [loc[0], loc[1]];
+        })) ;
         addGeometry( m);
         return m;
     }
@@ -106,10 +123,10 @@ export default function useMap() {
         createGeometry: createGeometryAndAdd,
         addMarker,
         addGeometry,
-        setProjection,
         markers,
         geometries,
         projection,
+        maxZoom,
         ref: ref as MapOptions
     }
 }
