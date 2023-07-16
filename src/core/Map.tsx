@@ -16,7 +16,7 @@ export default function Map(ref: any) {
             <div ref={ref} style={{position: "absolute", left: 0, top: 0, right: 0, bottom:0, overflow: "hidden"}}></div>
 
             {/*Div for panels and other custom elements*/}
-            <div style={{position: "absolute", left:0, top:0,right:0, bottom:0, pointerEvents: "none"}}>
+            <div style={{position: "absolute", left:0, top:0,right:0, bottom:0, pointerEvents: "none", zIndex: 500}}>
                 {Children.map(props.children, (child : any, i)=>
                   cloneElement(
                     child,
