@@ -3,18 +3,22 @@ import React from 'react'
 import { renderToString } from 'react-dom/server';
 import MarkerLayer from './MarkerLayer';
 import ReactDOM from 'react-dom/client';
+import { LocationPoint } from './LocationPoint';
 
 export type MapOptions = L.Map;
 
 export default class Marker{
-    private marker : L.Marker;
+    protected marker : L.Marker;
 
-    position: LatLngExpression;
+    location: LocationPoint;
     layer: MarkerLayer | undefined;
 
     map: MapOptions | undefined;
 
     isActive: boolean = false;
+
+    // @ts-ignore
+    htmlElement: HTMLElement;
 
     private reactElement: (marker: Marker, map: MapOptions)=>React.ReactElement;
 
@@ -22,7 +26,7 @@ export default class Marker{
         this.reactElement = marker;
         const html = "<div></div>";
 
-        const size = 40;
+        const size = 0;
         const icon  = L.divIcon({
             className: "marker-div",
             html,
@@ -30,9 +34,18 @@ export default class Marker{
             iconAnchor: [0,0]
         }); 
 
-        this.position = [latitude, longitude];
+        this.location = [latitude, longitude];
         this.marker = L.marker([latitude, longitude], {icon});
 
+    }
+
+    getLocation(){
+        return this.location;
+    }
+
+    setLocation(location: LocationPoint){
+        this.location = location;
+        this.marker.setLatLng(this.location);
     }
 
     attachMap(map: MapOptions){
@@ -46,8 +59,8 @@ export default class Marker{
         this.layer = layer;
     }
 
-    setActive(isActive: boolean){
-        if(isActive === this.isActive) return;
+    setActive(isActive: boolean, force: boolean = false){
+        if(!force && isActive === this.isActive) return;
         this.isActive = isActive;
 
         if(this.layer) this.layer._onChangeListener();
@@ -58,8 +71,13 @@ export default class Marker{
             const marker = this.marker.addTo( this.map );
             // @ts-ignore
             const htmlElement = marker._icon;
+            this.htmlElement = htmlElement;
+
             const htmlRoot = ReactDOM.createRoot(htmlElement);
             htmlRoot.render(this.reactElement(this, this.map))
+
+            // Disable click propagation to leaflet map
+            L.DomEvent.disableClickPropagation(this.htmlElement);
         }
         else this.marker.removeFrom( this.map )
 

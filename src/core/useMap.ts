@@ -5,6 +5,7 @@ import Marker, { MapOptions, createMarker } from './Marker'
 import Geometry, { createGeometry } from './Geometry';
 import {} from "proj4leaflet"
 import { LocationPoint } from './LocationPoint';
+import GeometryMarker, { createGeometryMarker } from './GeometryMarker';
 
 
 export interface CustomProjection{
@@ -22,7 +23,7 @@ export default function useMap(props? : UseMapProps ) {
 
     const maxZoom = useMemo(()=> {
         // @ts-ignore
-        return projection ? projection.crs.options.resolutions.length - 1 : 18}, [projection?.crs.options.resolutions]);
+        return projection ? projection.crs.options.resolutions.length - 2 : 18}, [projection?.crs.options.resolutions]);
 
 
     const divRef = useRef(null);
@@ -43,15 +44,13 @@ export default function useMap(props? : UseMapProps ) {
             return;
         };
         
-        
-
         try{
             const map = L.map(divRef.current, {
                 zoomControl: false,
                 ...(projection === undefined ? {} : {
                     crs: projection.crs
                 }),
-                maxZoom: maxZoom,
+                maxZoom: maxZoom , // Because of the bug
 
             });
             map.setView([50.018127619248084, 14.296341504868012], maxZoom/2);
@@ -107,6 +106,14 @@ export default function useMap(props? : UseMapProps ) {
         return m;
     }
 
+    const createGeometryMarkerAndAdd = (points: LocationPoint[], marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement) => {
+        const m = createGeometryMarker(points.map((p)=>{
+            const loc = transform(p);
+            return [loc[0], loc[1]];
+        }), marker) ;
+        addMarker(m);
+        return m;
+    }
     const createGeometryAndAdd = (points: LocationPoint[]) => {
         
         const m = createGeometry(points.map((p)=>{
@@ -121,6 +128,7 @@ export default function useMap(props? : UseMapProps ) {
         container,
         createMarker: createMarkerAndAdd,
         createGeometry: createGeometryAndAdd,
+        createGeometryMarker: createGeometryMarkerAndAdd,
         addMarker,
         addGeometry,
         markers,
