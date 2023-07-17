@@ -25,9 +25,13 @@ export default class GeometryMarker extends Marker{
             this.svgPathHtmlElement = this.polygon._path;
             this.svgPathHtmlElement.setAttribute("pointer-events", "auto");
 
-
+            
             // Disable click propagation to leaflet map
-            L.DomEvent.disableClickPropagation(this.svgPathHtmlElement);
+            this.polygon.on("click", (e: any)=>{
+                L.DomEvent.disableClickPropagation(e.target);
+            });
+
+
         }else{
             this.polygon.removeFrom( this.map );
         }
@@ -38,7 +42,9 @@ export default class GeometryMarker extends Marker{
         if(this.isActive){
             // Save and set the center of the polygon
             const center = this.polygon.getCenter();    
-            this.marker.setLatLng(center);  
+            this.marker.setLatLng(center);
+            this.location = [center.lat, center.lng];  
+        
         }
         
     }
