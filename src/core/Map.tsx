@@ -9,7 +9,7 @@ export default function Map(ref: any) {
   return (props: MapProps) => {
     return (
 
-    <div style={{...props.style, overflow: "hidden"}} >
+    <div style={{...props.style, overflow: "hidden", position: "absolute", left: 0, top: 0, right: 0, bottom: 0}} >
         <div style={{position: "relative", height: "100%"}}>
 
             {/*Div for map to render*/}
