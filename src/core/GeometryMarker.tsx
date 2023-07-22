@@ -7,10 +7,13 @@ export default class GeometryMarker extends Marker{
 
     // @ts-ignore
     svgPathHtmlElement: HTMLElement;
+
+    private points: LocationPoint[] = [];
     
     constructor( points: LocationPoint[], marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
         super(0,0, marker as (marker: Marker, map: any)=>React.ReactElement);
-        this.polygon = L.polygon(points);        
+        this.polygon = L.polygon(points);       
+        this.points = points; 
     }
 
     setActive(isActive: boolean){
@@ -40,8 +43,16 @@ export default class GeometryMarker extends Marker{
 
 
         if(this.isActive){
-            // Save and set the center of the polygon
-            const center = this.polygon.getCenter();    
+            // Save and set the center of the polygon   
+            
+            let sum = {lat: 0, lng: 0};
+            this.points.forEach( (point: LocationPoint)=>{
+                sum.lat += point[0];
+                sum.lng += point[1];
+            });
+            sum.lat = sum.lat / this.points.length;
+            sum.lng = sum.lng / this.points.length;
+            const center = sum;
             this.marker.setLatLng(center);
             this.location = [center.lat, center.lng];  
         
