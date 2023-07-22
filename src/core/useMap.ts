@@ -106,20 +106,24 @@ export default function useMap(props? : UseMapProps ) {
         return m;
     }
 
-    const createGeometryMarkerAndAdd = (points: LocationPoint[], marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement) => {
-        const m = createGeometryMarker([points.map((p)=>{
-            const loc = transform(p);
-            return [loc[0], loc[1]];
-        })], marker) ;
+    const createGeometryMarkerAndAdd = (points: LocationPoint[][], marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement) => {
+        const m = createGeometryMarker(points.map((p)=>{
+            return p.map((p)=>{
+                const loc = transform(p);
+                return [loc[0], loc[1]];
+            })
+        }), marker) ;
         addMarker(m);
         return m;
     }
-    const createGeometryAndAdd = (points: LocationPoint[]) => {
+    const createGeometryAndAdd = (points: LocationPoint[][]) => {
         
-        const m = createGeometry([points.map((p)=>{
-            const loc = transform(p);
-            return [loc[0], loc[1]];
-        })]) ;
+        const m = createGeometry(points.map((p)=>{
+            return p.map((p)=>{
+                const loc = transform(p);
+                return [loc[0], loc[1]];
+            })
+        })) ;
         addGeometry( m);
         return m;
     }
