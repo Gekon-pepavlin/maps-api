@@ -1,6 +1,7 @@
 import L, { LatLngExpression } from "leaflet";
 import { MapOptions } from "./Marker";
 import MarkerLayer from "./MarkerLayer";
+import { LocationPoint } from "./LocationPoint";
 
 
 export default class Geometry{
@@ -13,7 +14,7 @@ export default class Geometry{
 
     private polygon: L.Polygon;
     
-    constructor( points: LatLngExpression[]){
+    constructor( points: LocationPoint[][]){
         this.polygon = L.polygon(points);
     }
 
@@ -70,6 +71,6 @@ export default class Geometry{
     }
 }
 
-export function createGeometry(points: LatLngExpression[]){
+export function createGeometry(points: LocationPoint[][]){
     return new Geometry(points);
 }
