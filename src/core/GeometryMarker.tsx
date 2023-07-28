@@ -65,11 +65,11 @@ export default class GeometryMarker extends Marker{
         
     }
 
-    getPoint(): LocationPoint[][]{
+    getPoints(): LocationPoint[][]{
         return this.points;
     }
     
-    setPoint(points: LocationPoint[][]){
+    setPoints(points: LocationPoint[][]){
         this.points = points;
         this.polygon.setLatLngs(points);
     }
