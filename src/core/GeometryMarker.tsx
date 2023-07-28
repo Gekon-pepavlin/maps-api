@@ -64,6 +64,15 @@ export default class GeometryMarker extends Marker{
         }
         
     }
+
+    getPoint(): LocationPoint[][]{
+        return this.points;
+    }
+    
+    setPoint(points: LocationPoint[][]){
+        this.points = points;
+        this.polygon.setLatLngs(points);
+    }
 }
 
 export function createGeometryMarker( points: LocationPoint[][], marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
