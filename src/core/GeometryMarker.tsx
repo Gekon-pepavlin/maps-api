@@ -12,7 +12,7 @@ export default class GeometryMarker extends Marker{
     
     constructor( points: LocationPoint[][], marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
         super(0,0, marker as (marker: Marker, map: any)=>React.ReactElement);
-        this.polygon = L.polygon(points);       
+        this.polygon = L.polygon(points);  
         this.points = points; 
     }
 
@@ -46,13 +46,17 @@ export default class GeometryMarker extends Marker{
             // Save and set the center of the polygon   
             
             let sum = {lat: 0, lng: 0};
+
             const flatten = this.points.flat();
-            flatten.forEach( (point: LocationPoint)=>{
-                sum.lat += point[0];
-                sum.lng += point[1];
-            });
-            sum.lat = sum.lat / flatten.length;
-            sum.lng = sum.lng / flatten.length;
+            if(flatten.length > 0){
+                flatten.forEach( (point: LocationPoint)=>{
+                    sum.lat += point[0];
+                    sum.lng += point[1];
+                });
+                sum.lat = sum.lat / flatten.length;
+                sum.lng = sum.lng / flatten.length;
+
+            }
             const center = sum;
             this.marker.setLatLng(center);
             this.location = [center.lat, center.lng];  
