@@ -83,6 +83,10 @@ export default class Marker{
 
     }
 
+    getMarker(){
+        return this.marker;
+    }
+
 }
 
 export function createMarker(latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement){

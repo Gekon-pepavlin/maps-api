@@ -3,7 +3,7 @@ import { LocationPoint } from "./LocationPoint";
 import Marker from "./Marker";
 
 export default class GeometryMarker extends Marker{
-    polygon: L.Polygon;
+    private polygon: L.Polygon;
 
     // @ts-ignore
     svgPathHtmlElement: HTMLElement;
@@ -72,6 +72,10 @@ export default class GeometryMarker extends Marker{
     setPoints(points: LocationPoint[][]){
         this.points = points;
         this.polygon.setLatLngs(points);
+    }
+
+    getPolygon(): L.Polygon{
+        return this.polygon;
     }
 }
 
