@@ -28,7 +28,7 @@ export default class GeometryMarker extends Marker{
             this.leafletObject.addTo( this.map );   
             
             // @ts-ignore
-            this.svgPathHtmlElement = this.polygon._path;
+            this.svgPathHtmlElement = this.leafletObject._path;
             this.svgPathHtmlElement.setAttribute("pointer-events", "auto");
 
             
