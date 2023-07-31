@@ -1,18 +1,21 @@
 import L from "leaflet";
 import { LocationPoint } from "./LocationPoint";
 import Marker from "./Marker";
+import { GeometryType } from './Geometry';
 
 export default class GeometryMarker extends Marker{
-    private polygon: L.Polygon;
+    private leafletObject: L.Polygon | L.Polyline;
 
     // @ts-ignore
     svgPathHtmlElement: HTMLElement;
 
     private points: LocationPoint[][] = [];
+    private geometryType: GeometryType;
     
-    constructor( points: LocationPoint[][], marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
+    constructor( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
         super(0,0, marker as (marker: Marker, map: any)=>React.ReactElement);
-        this.polygon = L.polygon(points);  
+        this.geometryType = type;
+        this.leafletObject = type == "polygon" ? L.polygon(points) : L.polyline(points);  
         this.points = points; 
     }
 
@@ -22,7 +25,7 @@ export default class GeometryMarker extends Marker{
 
         if(!this.map) return;
         if( this.isActive ){
-            this.polygon.addTo( this.map );   
+            this.leafletObject.addTo( this.map );   
             
             // @ts-ignore
             this.svgPathHtmlElement = this.polygon._path;
@@ -30,13 +33,13 @@ export default class GeometryMarker extends Marker{
 
             
             // Disable click propagation to leaflet map
-            this.polygon.on("click", (e: any)=>{
+            this.leafletObject.on("click", (e: any)=>{
                 L.DomEvent.disableClickPropagation(e.target);
             });
 
 
         }else{
-            this.polygon.removeFrom( this.map );
+            this.leafletObject.removeFrom( this.map );
         }
 
         super.setActive(isActive, true);
@@ -71,14 +74,14 @@ export default class GeometryMarker extends Marker{
     
     setPoints(points: LocationPoint[][]){
         this.points = points;
-        this.polygon.setLatLngs(points);
+        this.leafletObject.setLatLngs(points);
     }
 
-    getPolygon(): L.Polygon{
-        return this.polygon;
+    getLeafletObject(){
+        return this.leafletObject;
     }
 }
 
-export function createGeometryMarker( points: LocationPoint[][], marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
-    return new GeometryMarker(points, marker);
+export function createGeometryMarker( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
+    return new GeometryMarker(points, type, marker);
 }

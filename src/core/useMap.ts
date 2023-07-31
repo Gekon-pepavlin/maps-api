@@ -2,7 +2,7 @@ import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
 import Map from './Map'
 import * as L from "leaflet"
 import Marker, { MapOptions, createMarker } from './Marker'
-import Geometry, { createGeometry } from './Geometry';
+import Geometry, { GeometryType, createGeometry } from './Geometry';
 import {} from "proj4leaflet"
 import { LocationPoint } from './LocationPoint';
 import GeometryMarker, { createGeometryMarker } from './GeometryMarker';
@@ -106,24 +106,24 @@ export default function useMap(props? : UseMapProps ) {
         return m;
     }
 
-    const createGeometryMarkerAndAdd = (points: LocationPoint[][], marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement) => {
+    const createGeometryMarkerAndAdd = (points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement) => {
         const m = createGeometryMarker(points.map((p)=>{
             return p.map((p)=>{
                 const loc = transform(p);
                 return [loc[0], loc[1]];
             })
-        }), marker) ;
+        }), type, marker) ;
         addMarker(m);
         return m;
     }
-    const createGeometryAndAdd = (points: LocationPoint[][]) => {
+    const createGeometryAndAdd = (points: LocationPoint[][], type : GeometryType) => {
         
         const m = createGeometry(points.map((p)=>{
             return p.map((p)=>{
                 const loc = transform(p);
                 return [loc[0], loc[1]];
             })
-        })) ;
+        }), type) ;
         addGeometry( m);
         return m;
     }
