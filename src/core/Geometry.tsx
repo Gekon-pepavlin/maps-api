@@ -43,7 +43,7 @@ export default class Geometry{
         if( this.isActive ){
             this.leafletObject.addTo( this.map );
             // @ts-ignore
-            this.htmlElement = this.polygon._path;
+            this.htmlElement = this.leafletObject._path;
             this.htmlElement?.setAttribute("pointer-events", "auto");
             
         }
