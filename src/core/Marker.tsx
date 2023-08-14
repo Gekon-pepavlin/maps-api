@@ -24,7 +24,7 @@ export default class Marker{
 
     constructor(latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement){
         this.reactElement = marker;
-        const html = "<div></div>";
+        const html = "<div>a</div>";
 
         const size = 0;
         const icon  = L.divIcon({
@@ -36,6 +36,20 @@ export default class Marker{
 
         this.location = [latitude, longitude];
         this.marker = L.marker([latitude, longitude], {icon});
+        this.marker.on("add", (e)=>{
+            if(!this.map){
+                console.error("Cannot continue in add callback - Map not attached to marker");
+                return;
+            }
+            const htmlElement = e.target._icon;
+            this.htmlElement = htmlElement;
+
+            const htmlRoot = ReactDOM.createRoot(htmlElement);
+            htmlRoot.render(this.reactElement(this, this.map))
+
+            // Disable click propagation to leaflet map
+            L.DomEvent.disableClickPropagation(this.htmlElement);
+        })
 
     }
 
@@ -54,9 +68,15 @@ export default class Marker{
     }
 
     addToLayer(layer: MarkerLayer){
-
-        layer._addMarker(this);
+        if(!this.map){
+            console.error("Cannot add to layer - Map not attached to marker");
+            return;
+        }
         this.layer = layer;
+        layer._attachMap(this.map);
+        layer._addMarker(this);
+        this.setActive(true, true);
+
     }
 
     setActive(isActive: boolean, force: boolean = false){
@@ -67,25 +87,20 @@ export default class Marker{
         
         if(!this.map) return;
 
+        const parent = this.layer?._getLeafletObjectWhereToAdd() || this.map;
         if( this.isActive ){
-            const marker = this.marker.addTo( this.map );
-            // @ts-ignore
-            const htmlElement = marker._icon;
-            this.htmlElement = htmlElement;
-
-            const htmlRoot = ReactDOM.createRoot(htmlElement);
-            htmlRoot.render(this.reactElement(this, this.map))
-
-            // Disable click propagation to leaflet map
-            L.DomEvent.disableClickPropagation(this.htmlElement);
+            this.marker.addTo(parent);
+            
         }
-        else this.marker.removeFrom( this.map )
+        else this.marker.removeFrom(parent)
 
     }
 
-    getMarker(){
+    getLeafletMarker(){
         return this.marker;
     }
+
+    
 
 }
 

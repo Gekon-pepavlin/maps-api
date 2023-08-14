@@ -13,6 +13,8 @@ export default class MarkerLayer{
     layer: MarkerLayer | undefined;
 
     isActive: boolean = true;
+
+    protected map : L.Map | undefined;
     constructor(){
 
     }
@@ -66,6 +68,19 @@ export default class MarkerLayer{
     addToLayer(layer: MarkerLayer){
         layer.layers.push(this);
         this.layer = layer;
+    }
+
+    _attachMap(map: L.Map){
+        // Just beacuse of ClusterMarkerLayer
+        // Can be stayed empty
+        this.map = map;
+    }
+
+    _getLeafletObjectWhereToAdd() : any{
+        if(!this.map){
+            console.error("Cannot get leaflet object where to add - Map not attached to marker");
+        }
+        return this.map;
     }
 
 }
