@@ -2,15 +2,17 @@ import L from "leaflet";
 import 'leaflet.markercluster';
 import MarkerLayer from "./MarkerLayer";
 import Marker, { MapOptions } from "./Marker";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 
 export default class ClusterMarkerLayer extends MarkerLayer{
     private clusterGroup : L.MarkerClusterGroup;
 
-    constructor(graphics: ()=>React.ReactElement){
+    constructor(graphics: ()=>React.ReactElement, pixelsRadius: number = 25){
         super();
         this.clusterGroup = L.markerClusterGroup({
             showCoverageOnHover: false,
-            animateAddingMarkers: true,
+            animate: false,
+            maxClusterRadius: pixelsRadius,
             iconCreateFunction: function (cluster) {
                 var markers = cluster.getAllChildMarkers();
                 const html = `<div style="background-color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center">${cluster.getChildCount()}</div>`;
@@ -34,6 +36,7 @@ export default class ClusterMarkerLayer extends MarkerLayer{
             console.error("Map not attached to cluster layer");
             return;
         }
+        
 
         super._addMarker(marker);
 

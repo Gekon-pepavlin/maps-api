@@ -24,7 +24,7 @@ export default class Marker{
 
     constructor(latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement){
         this.reactElement = marker;
-        const html = "<div>a</div>";
+        const html = "<div></div>";
 
         const size = 0;
         const icon  = L.divIcon({
@@ -72,11 +72,16 @@ export default class Marker{
             console.error("Cannot add to layer - Map not attached to marker");
             return;
         }
+        this.marker.removeFrom(this._getParentWhereToAdd());
+
         this.layer = layer;
         layer._attachMap(this.map);
         layer._addMarker(this);
-        this.setActive(true, true);
 
+    }
+
+    _getParentWhereToAdd(){
+        return this.layer?._getLeafletObjectWhereToAdd() || this.map;
     }
 
     setActive(isActive: boolean, force: boolean = false){
@@ -87,13 +92,12 @@ export default class Marker{
         
         if(!this.map) return;
 
-        const parent = this.layer?._getLeafletObjectWhereToAdd() || this.map;
+        const parent = this._getParentWhereToAdd();
         if( this.isActive ){
             this.marker.addTo(parent);
             
         }
         else this.marker.removeFrom(parent)
-
     }
 
     getLeafletMarker(){
