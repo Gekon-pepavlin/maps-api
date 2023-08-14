@@ -3,7 +3,7 @@ import 'leaflet.markercluster';
 import MarkerLayer from "./MarkerLayer";
 import Marker, { MapOptions } from "./Marker";
 
-export class ClusterMarkerLayer extends MarkerLayer{
+export default class ClusterMarkerLayer extends MarkerLayer{
     private clusterGroup : L.MarkerClusterGroup;
 
     constructor(graphics: ()=>React.ReactElement){
