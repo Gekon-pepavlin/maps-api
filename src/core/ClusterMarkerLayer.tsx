@@ -2,7 +2,6 @@ import L from "leaflet";
 import 'leaflet.markercluster';
 import MarkerLayer from "./MarkerLayer";
 import Marker, { MapOptions } from "./Marker";
-import "leaflet.markercluster/dist/MarkerCluster.css";
 
 export default class ClusterMarkerLayer extends MarkerLayer{
     private clusterGroup : L.MarkerClusterGroup;
