@@ -18,7 +18,6 @@ export default class GeometryMarker extends Marker{
 
         this.leafletObject = type == "polygon" ? L.polygon(points) : L.polyline(points);  
         this.geometryType = type;
-        console.log("GeometryMarker constructor", this.leafletObject)
         this.points = points; 
 
         this.setActive(true)
@@ -32,9 +31,7 @@ export default class GeometryMarker extends Marker{
 
         if(!this.map) return;
         if( this.isActive ){
-            console.log("Adding geometry to map", this.leafletObject)
-            this.leafletObject.addTo( this.map );   
-            
+            this.leafletObject.addTo(this.map)
             // @ts-ignore
             this.svgPathHtmlElement = this.leafletObject._path;
             this.svgPathHtmlElement.setAttribute("pointer-events", "auto");
