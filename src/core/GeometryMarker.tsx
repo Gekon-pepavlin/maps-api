@@ -2,6 +2,7 @@ import L from "leaflet";
 import { LocationPoint } from "./LocationPoint";
 import Marker from "./Marker";
 import { GeometryType } from './Geometry';
+import { MapOptions } from "./MapObject";
 
 export default class GeometryMarker extends Marker{
     private leafletObject: L.Polygon | L.Polyline;
@@ -12,8 +13,8 @@ export default class GeometryMarker extends Marker{
     private points: LocationPoint[][] = [];
     private geometryType: GeometryType;
     
-    constructor( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
-        super(0,0, marker as (marker: Marker, map: any)=>React.ReactElement);
+    constructor( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement, map: MapOptions){
+        super(0,0, marker as (marker: Marker, map: any)=>React.ReactElement, map);
         this.geometryType = type;
         this.leafletObject = type == "polygon" ? L.polygon(points) : L.polyline(points);  
         this.points = points; 
@@ -21,6 +22,7 @@ export default class GeometryMarker extends Marker{
 
     setActive(isActive: boolean){
         if(isActive === this.isActive) return;
+
         this.isActive = isActive;
 
         if(!this.map) return;
@@ -82,6 +84,6 @@ export default class GeometryMarker extends Marker{
     }
 }
 
-export function createGeometryMarker( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement){
-    return new GeometryMarker(points, type, marker);
+export function createGeometryMarker( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement, map: MapOptions){
+    return new GeometryMarker(points, type, marker, map);
 }

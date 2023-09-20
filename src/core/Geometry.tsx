@@ -1,7 +1,7 @@
 import L, { LatLngExpression } from "leaflet";
-import { MapOptions } from "./Marker";
 import MarkerLayer from "./MarkerLayer";
 import { LocationPoint } from "./LocationPoint";
+import { MapOptions } from "./MapObject";
 
 export type GeometryType = "polygon" | "line";
 
@@ -28,7 +28,7 @@ export default class Geometry{
 
     addToLayer(layer: MarkerLayer){
 
-        layer._addGeometry(this);
+        // layer._addGeometry(this);
         this.layer = layer;
     }
 
@@ -36,7 +36,7 @@ export default class Geometry{
         if(isActive === this.isActive) return;
         this.isActive = isActive;
 
-        if(this.layer) this.layer._onChangeListener();
+        // if(this.layer) this.layer._onChangeListener();
         
         if(!this.map) return;
 

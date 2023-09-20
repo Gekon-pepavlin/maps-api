@@ -1,11 +1,14 @@
-import React, { Children, Ref, cloneElement } from 'react'
+import React, { Children, Ref, cloneElement, useCallback } from 'react'
 // import "./map.css"
+import useMap from './useMap';
 
 export interface MapProps{
     style?: React.CSSProperties,
     children?: React.ReactNode
 }
-export default function Map(ref: any) {
+export default function MapContainer(ref: any, onMountChange?: ()=>void) {
+  let initialized = false;
+
   return (props: MapProps) => {
     return (
 
@@ -24,6 +27,15 @@ export default function Map(ref: any) {
                   )
                 )}
             </div>
+
+            <div ref={(node)=>{
+              if(!node) return;
+
+              if(initialized) return;
+              initialized = true;
+              
+              onMountChange?.()
+            }}/>
 
         </div>
     </div>
