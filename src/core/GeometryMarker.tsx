@@ -85,6 +85,11 @@ export default class GeometryMarker extends Marker{
     getLeafletObject(){
         return this.leafletObject;
     }
+
+
+    setStyle(style: L.PathOptions){
+        this.leafletObject.setStyle(style);
+    }
 }
 
 export function createGeometryMarker( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement, map: MapOptions){

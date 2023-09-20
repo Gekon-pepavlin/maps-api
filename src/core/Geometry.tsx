@@ -1,4 +1,5 @@
-import * as React from "react";
+import L, { LatLngExpression } from "leaflet";
+import MarkerLayer from "./MarkerLayer";
 import { LocationPoint } from "./LocationPoint";
 import { MapOptions } from "./MapObject";
 import GeometryMarker from "./GeometryMarker";
