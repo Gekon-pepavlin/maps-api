@@ -228,15 +228,19 @@ export default class ClusterMarkerLayer extends MapObject{
     }
 
 
-    add(marker: MapObject){
+    add(marker: MapObject | MapObject[]){
         super.add(marker);
-
-        this.objects.push(marker);
+        
+        if(Array.isArray(marker)){
+            this.objects.push(...marker);
+        }else{
+            this.objects.push(marker);
+        }
 
         this._set(this.objects);
 
-
     }
+
 
     private _set(markers: MapObject[]){
         const clusters = this._splitToClusters(markers);

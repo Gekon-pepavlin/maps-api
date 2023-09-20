@@ -58,7 +58,16 @@ export default class MapObject{
     protected setMap(map: L.Map){
         this.map = map;
     }
-    protected add(child: MapObject){
+    protected add(child: MapObject | MapObject[]){
+        if(child instanceof Array){
+            child.forEach( (c)=>{
+                this._add(c);
+            })
+        }else{
+            this._add(child);
+        }
+    }
+    private _add(child: MapObject){
         this.children.push(child);
         child._setParent(this);
 
