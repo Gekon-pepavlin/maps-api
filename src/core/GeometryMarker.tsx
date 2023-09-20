@@ -15,18 +15,24 @@ export default class GeometryMarker extends Marker{
     
     constructor( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement, map: MapOptions){
         super(0,0, marker as (marker: Marker, map: any)=>React.ReactElement, map);
-        this.geometryType = type;
+
         this.leafletObject = type == "polygon" ? L.polygon(points) : L.polyline(points);  
+        this.geometryType = type;
+        console.log("GeometryMarker constructor", this.leafletObject)
         this.points = points; 
+
+        this.setActive(true)
     }
 
     setActive(isActive: boolean){
+        if(!this.leafletObject)return;
         if(isActive === this.isActive) return;
 
         this.isActive = isActive;
 
         if(!this.map) return;
         if( this.isActive ){
+            console.log("Adding geometry to map", this.leafletObject)
             this.leafletObject.addTo( this.map );   
             
             // @ts-ignore
