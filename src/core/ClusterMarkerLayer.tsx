@@ -2,7 +2,7 @@ import 'leaflet.markercluster';
 import MapObject, { MapOptions } from "./MapObject";
 import MarkerLayer from './MarkerLayer';
 import Marker from './Marker';
-import { useMemo } from 'react';
+import React from 'react';
 import { v4 as uuid } from 'uuid';
 
 
