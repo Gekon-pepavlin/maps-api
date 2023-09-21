@@ -45,6 +45,8 @@ class Cluster{
 
     private _onRelase?: ()=>void;
 
+    private isActive = true;
+
     constructor(
         map: MapOptions,
         radiusInPixels: number,
@@ -128,7 +130,7 @@ class Cluster{
 
     private _display(zoom: number){
         // console.log(this.startZoom, this.endZoom)
-        if (zoom >= this.startZoom && zoom <= this.endZoom && this.clusters.length>0){
+        if (zoom >= this.startZoom && zoom <= this.endZoom && this.clusters.length>0 && this.isActive){
             this.marker.setActive(true);
 
         }else{
@@ -138,7 +140,7 @@ class Cluster{
 
         
 
-        if(zoom >= this.startZoom){
+        if(zoom >= this.startZoom && this.isActive){
             this.objects.forEach((o)=>{
                 o.setActive(true);
             })
@@ -161,6 +163,16 @@ class Cluster{
 
         this._onRelase?.();
 
+    }
+
+    setActive(isActive: boolean){
+        this.clusters.forEach((cluster)=>{
+            cluster.setActive(isActive);
+        })
+
+        if(this.isActive === isActive) return;
+        this.isActive = isActive;
+        this._display(this.map.getZoom());
     }
 
     getTotalSubclustersCount(){
@@ -340,6 +352,13 @@ export default class ClusterMarkerLayer extends MapObject{
         return [clusterXIndex, clusterYIndex]
     }
 
+    setActive(isActive: boolean, force?: boolean) {
+        this.mainClusters.forEach((cluster)=>{
+            cluster.setActive(isActive);
+        })
+
+        super.setActive(isActive, force, true);
+    }
 
 
 }

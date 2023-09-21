@@ -156,7 +156,7 @@ export default class MapObject{
 
 
 
-    setActive(isActive: boolean, force: boolean = false) : any{
+    setActive(isActive: boolean, force: boolean = false, ignoreChildren = false) : any{
         if(!this.map){
             console.log("Cannot change active property because map is not attached");
             return;
@@ -164,9 +164,11 @@ export default class MapObject{
         if(!force && isActive === this.isActive) return;
         this.isActive = isActive;
 
-        this.children.forEach( (child)=>{
-            child.setActive(isActive, force);
-        });
+        if(!ignoreChildren){
+            this.children.forEach( (child)=>{
+                child.setActive(isActive, force);
+            });
+        }
 
         if(this.hasParent) this.parent?.onChildrenActiveChange();
 
