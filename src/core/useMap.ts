@@ -169,8 +169,6 @@ export default function useMap(props? : UseMapProps ) {
         createGeometryMarker: createGeometryMarkerAndAdd,
         createLayer: createLayerAndAdd,
         createClusterLayer: createClusterLayerAndAdd,
-        // addMarker,
-        // addGeometry,
         markers,
         geometries,
         projection,

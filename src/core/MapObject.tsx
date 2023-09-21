@@ -80,7 +80,7 @@ export default class MapObject{
         if(index>=0){
             this.children[index].parent = undefined
             // remove from array
-            const d = this.children.splice(index, 1);
+            this.children.splice(index, 1);
 
         }else{
             console.log("Child not found.")

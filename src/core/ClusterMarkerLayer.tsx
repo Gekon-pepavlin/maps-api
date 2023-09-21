@@ -80,8 +80,14 @@ class Cluster{
 
         this.markerLayer = new MarkerLayer(this.map);
         
-        this.marker = new Marker(0,0,()=>{
-            return this.reactElement(this.allSubObjectsCount)
+        this.marker = new Marker(0,0,(marker, map)=>{
+            const onClick = () =>{
+                map.flyTo(marker.getLocation(), this.endZoom+1);
+            }
+
+            return <div onClick={onClick}>
+                {this.reactElement(this.allSubObjectsCount)}
+            </div>
         }, this.map)
 
 
@@ -237,6 +243,12 @@ export default class ClusterMarkerLayer extends MapObject{
         this.clusterReactElement = reactElement;
         this.radius = radiusInPixels;
 
+        // This marker fix the bug. If all submarker is not active, this is. The layer stays active
+        const justMarker = new Marker(30,30,()=>{
+            return <></>
+        }, map);
+
+        super.add(justMarker)
     }
 
 
@@ -353,11 +365,12 @@ export default class ClusterMarkerLayer extends MapObject{
     }
 
     setActive(isActive: boolean, force?: boolean) {
+        super.setActive(isActive, force, true);
+
         this.mainClusters.forEach((cluster)=>{
             cluster.setActive(isActive);
         })
 
-        super.setActive(isActive, force, true);
     }
 
 
