@@ -101,10 +101,6 @@ class Cluster{
 
 
 
-        const onZoomEnd = () =>{
-            this.redisplay()
-        }
-        this.map.on("zoomend", onZoomEnd)
 
         const onLocationChange = () =>{
             this.marker.setLocation(this.markerLayer.getLocation());
@@ -117,8 +113,6 @@ class Cluster{
 
 
         this._onRelase = () => {
-            // console.log("Releasing cluster with id:", this.id)
-            this.map.off("zoomend", onZoomEnd)
             this.markerLayer.removeListener("locationchange", onLocationChange)
             this.marker.delete();
 
@@ -156,6 +150,13 @@ class Cluster{
             })
         }
         
+    }
+
+    onZoomChange(){
+        this.redisplay();
+        this.clusters.forEach((cluster)=>{
+            cluster.onZoomChange();
+        })
     }
 
     
@@ -235,6 +236,8 @@ export default class ClusterMarkerLayer extends MapObject{
     private mainClusters: Cluster[] = [];
 
     private objects: MapObject[] = [];
+
+    private onZoomEnd = () => {};
     
 
     constructor(reactElement: (count:number)=>React.ReactElement, map: MapOptions, radiusInPixels: number = 200){
@@ -249,6 +252,13 @@ export default class ClusterMarkerLayer extends MapObject{
         }, map);
 
         super.add(justMarker)
+
+        this.onZoomEnd = ()=>{
+            this.mainClusters.forEach((cluster)=>{
+                cluster.onZoomChange();
+            });
+        }
+        map.on("zoomend", this.onZoomEnd);
     }
 
 
@@ -371,6 +381,14 @@ export default class ClusterMarkerLayer extends MapObject{
             cluster.setActive(isActive);
         })
 
+    }
+
+    delete(): void {
+        super.delete();
+        this.mainClusters.forEach((cluster)=>{
+            cluster.release();
+        });
+        this.map.off("zoomend", this.onZoomEnd);
     }
 
 
