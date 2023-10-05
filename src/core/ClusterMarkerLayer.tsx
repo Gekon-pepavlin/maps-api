@@ -4,6 +4,7 @@ import MarkerLayer from './MarkerLayer';
 import Marker from './Marker';
 import React from 'react';
 import { v4 as uuid } from 'uuid';
+import { LocationPoint } from './LocationPoint';
 
 
 type GroupsDict = Record<number, Record<number, Group>>;
@@ -45,7 +46,7 @@ class Cluster{
 
     private _onRelase?: ()=>void;
 
-    private isActive = true;
+    private isActive = false;
 
     constructor(
         map: MapOptions,
@@ -78,8 +79,8 @@ class Cluster{
 
     public initialize(){
 
-        this.markerLayer = new MarkerLayer(this.map);
-        
+        this.markerLayer = new MarkerLayer(this.map)
+
         this.marker = new Marker(0,0,(marker, map)=>{
             const onClick = () =>{
                 map.flyTo(marker.getLocation(), this.endZoom+1);
@@ -89,27 +90,22 @@ class Cluster{
                 {this.reactElement(this.allSubObjectsCount)}
             </div>
         }, this.map)
+        this.marker.setActive(false)
+        
 
 
-        this.objects.forEach((object)=>{
-            this.markerLayer.add(object);
-        })
+        this.markerLayer.add(this.objects)
 
         this.parentCluster?.markerLayer.add(this.marker);
-
-
-
-
-
+    
 
         const onLocationChange = () =>{
             this.marker.setLocation(this.markerLayer.getLocation());
         }
+
         this.markerLayer.addListener("locationchange", onLocationChange)
         this.marker.setLocation(this.markerLayer.getLocation());
-
-
-        this.redisplay()
+        
 
 
         this._onRelase = () => {
@@ -121,20 +117,30 @@ class Cluster{
         this.clusters.forEach((cluster)=>{
             cluster.initialize();
         });
+
+    }
+
+    public initializeObjects(){
+        this.marker.initialize();
+        this.markerLayer.initialize();
+
+        this.clusters.forEach((cluster)=>{
+            cluster.initializeObjects();
+        })
     }
     
-    private redisplay(){
-        // console.log("Redisplaying cluster with zoom:", this.map.getZoom())
-        this._display(this.map.getZoom());
+    redisplay(force: boolean = false){
+        // console.log("Redisplaying", this.isActive)
+        this._display(this.map.getZoom(), force);
     }
 
-    private _display(zoom: number){
-        // console.log(this.startZoom, this.endZoom)
+    private _display(zoom: number, force?: boolean){
         if (zoom >= this.startZoom && zoom <= this.endZoom && this.clusters.length>0 && this.isActive){
-            this.marker.setActive(true);
+            this.marker?.setActive(true);
+            this.marker?.initialize();
 
         }else{
-            this.marker.setActive(false);
+            this.marker?.delete()
 
         }
 
@@ -142,25 +148,22 @@ class Cluster{
 
         if(zoom >= this.startZoom && this.isActive){
             this.objects.forEach((o)=>{
+                this.markerLayer.add(o);
                 o.setActive(true);
+                o.initialize()
             })
         }else{
             this.objects.forEach((o)=>{
-                o.setActive(false);
+                o.delete()
             })
         }
-        
     }
 
-    onZoomChange(){
-        this.redisplay();
-        this.clusters.forEach((cluster)=>{
-            cluster.onZoomChange();
-        })
+    getAllSubclusters() : Cluster[]{
+        return this.clusters.reduce((acc, cluster)=>{
+            return [...acc, ...cluster.getAllSubclusters()]
+        }, this.clusters)
     }
-
-    
-
 
     // Use for clean up before deleting
     release(){
@@ -172,14 +175,15 @@ class Cluster{
 
     }
 
-    setActive(isActive: boolean){
+    setActive(isActive: boolean, force: boolean = false){
         this.clusters.forEach((cluster)=>{
             cluster.setActive(isActive);
         })
-
-        if(this.isActive === isActive) return;
+        
+        
+        if(this.isActive === isActive && !force) return;
         this.isActive = isActive;
-        this._display(this.map.getZoom());
+        this.redisplay(true);
     }
 
     getTotalSubclustersCount(){
@@ -234,11 +238,11 @@ export default class ClusterMarkerLayer extends MapObject{
 
 
     private mainClusters: Cluster[] = [];
+    private clustersByZoom: Record<number, Cluster[]> = {};
 
     private objects: MapObject[] = [];
 
-    private onZoomEnd = () => {};
-    
+    private _onZoomEnd = this._onZoomChange.bind(this);
 
     constructor(reactElement: (count:number)=>React.ReactElement, map: MapOptions, radiusInPixels: number = 200){
         super(map,"ClusterLayer");
@@ -253,12 +257,29 @@ export default class ClusterMarkerLayer extends MapObject{
 
         super.add(justMarker)
 
-        this.onZoomEnd = ()=>{
-            this.mainClusters.forEach((cluster)=>{
-                cluster.onZoomChange();
+        map.on("zoomend", this._onZoomEnd);
+    }
+
+    private _lastZoom = -1;
+    private _onZoomChange(){
+        const currentZoom = this.map.getZoom();
+
+        const willBeActive = this.clustersByZoom[currentZoom];
+        willBeActive?.forEach((cluster)=>{
+            cluster.redisplay()
+        });
+
+        if(this._lastZoom >= 0 && this._lastZoom !== currentZoom){
+            const wasActive = this.clustersByZoom[this._lastZoom];
+            const filteredWasActive = wasActive?.filter((cluster)=>willBeActive.indexOf(cluster)<0);
+            filteredWasActive?.forEach((cluster)=>{
+                cluster.redisplay()
             });
         }
-        map.on("zoomend", this.onZoomEnd);
+
+
+        this._lastZoom = currentZoom;
+        
     }
 
 
@@ -277,38 +298,63 @@ export default class ClusterMarkerLayer extends MapObject{
 
 
     private _set(markers: MapObject[]){
-        const clusters = this._splitToClusters(markers);
+        // console.log("Starting to split to clusters of total count", markers.length)
 
+        markers.forEach((marker)=>{
+            marker.setActive(false);
+        });
+
+        const clusters = this._splitToClusters(markers)
 
         this.mainClusters.forEach((cluster)=>{
             cluster.release();
         });
+        
+        this.mainClusters = clusters.map((data) => createCluster(data, this.map, this.radius, this.clusterReactElement))
 
-        this.mainClusters = clusters.map((data) => createCluster(data, this.map, this.radius, this.clusterReactElement));
         this.mainClusters.forEach((cluster)=>{
-            cluster.initialize();
-            super.add(cluster.markerLayer);
-        });
+            const allSubclusters = [cluster, ...cluster.getAllSubclusters()]; // Including itself
+            
+            allSubclusters.forEach((subcluster)=>{
+                for(let zoom = subcluster.startZoom; zoom <= subcluster.endZoom; zoom++){
+                    if(!this.clustersByZoom[zoom]) this.clustersByZoom[zoom] = [];
+                    this.clustersByZoom[zoom].push(subcluster);
+                }
+            })
+        })
 
+        this.mainClusters.forEach((cluster)=>{
+            cluster.setActive(this.isActive)
+            cluster.initialize();
+        })
+
+        this.mainClusters.forEach((cluster)=>{
+            super.add(cluster.markerLayer);
+        })
+        
 
 
     }
+    //#region SPLIT_TO_CLUSTERS functions
 
     private _splitToClusters(markers: MapObject[]) : ClusterData[]{
         
 
 
-        const groupsDict : GroupsDict = [];
-        const groups : Group[] = [];
+        const mainGroupsDict : GroupsDict = [];
+        const mainGroups : Group[] = [];
         const min = this.map.getMinZoom();
         const max = this.map.getMaxZoom();
+
         markers.forEach((marker)=>{
             let lastGroup : Group | undefined;
 
-            for(let i = min; i <= max; i++){
-                const [x,y] = this._getClusterIndexes(marker, i);
+            const location = marker.getLocation();
 
-                const parentGroups = lastGroup ? (lastGroup as Group).groupsDict : groupsDict;
+            for(let i = min; i <= max; i++){
+                const [x,y] = this._getClusterIndexes(location, i);
+
+                const parentGroups = lastGroup ? (lastGroup as Group).groupsDict : mainGroupsDict;
 
                 if(!parentGroups[x]) parentGroups[x] = {};
                 if(!parentGroups[x][y]) parentGroups[x][y] = {
@@ -320,7 +366,7 @@ export default class ClusterMarkerLayer extends MapObject{
 
                 const currentGroup : Group = parentGroups[x][y];
                 if(lastGroup && lastGroup.groups.indexOf(currentGroup) < 0) lastGroup.groups.push(currentGroup);
-                if(!lastGroup && groups.indexOf(currentGroup) < 0) groups.push(currentGroup);
+                if(!lastGroup && mainGroups.indexOf(currentGroup) < 0) mainGroups.push(currentGroup);
 
 
                 if(i === max)
@@ -331,14 +377,19 @@ export default class ClusterMarkerLayer extends MapObject{
             
 
             }
+            
 
 
         });
+        
 
 
-        return groups.map((group)=>{
-            return this._simplifyGroup(group);
-        });
+        const result = mainGroups.map((group)=>{
+                return this._simplifyGroup(group);
+            })
+        
+
+        return result;
     }
 
     private _simplifyGroup(group: Group) : ClusterData{
@@ -367,28 +418,40 @@ export default class ClusterMarkerLayer extends MapObject{
         return cluster;
     }
 
-    private _getClusterIndexes(object: MapObject, zoom: number) : [number, number]{
-        const point = this.map.project(object.getLocation(),zoom);
+    private _getClusterIndexes(objectLocation: LocationPoint, zoom: number) : [number, number]{
+        const point = this.map.project(objectLocation,zoom);
         const clusterXIndex = Math.floor(point.x / this.radius);
         const clusterYIndex = Math.floor(point.y / this.radius);
         return [clusterXIndex, clusterYIndex]
     }
+    //#endregion
 
     setActive(isActive: boolean, force?: boolean) {
         super.setActive(isActive, force, true);
 
         this.mainClusters.forEach((cluster)=>{
-            cluster.setActive(isActive);
+            cluster.setActive(isActive, true);
         })
 
     }
 
+    initialize(): boolean {
+        const r = super.initialize();
+
+        this.mainClusters.forEach((cluster)=>{
+            cluster.initializeObjects();
+        })
+
+        this._onZoomEnd()
+
+        return r;
+    }
     delete(): void {
         super.delete();
         this.mainClusters.forEach((cluster)=>{
             cluster.release();
         });
-        this.map.off("zoomend", this.onZoomEnd);
+        this.map.off("zoomend", this._onZoomEnd);
     }
 
 

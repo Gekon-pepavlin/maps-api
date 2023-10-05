@@ -7,10 +7,10 @@ import { LocationPoint } from './LocationPoint';
 import MapObject, { MapOptions } from './MapObject';
 
 const MarkerContainer = ({marker, map, element}:{marker: Marker, map: MapOptions, element: (marker:Marker, map:MapOptions)=>React.ReactElement}) => {
-    const [visible, setVisible] = React.useState(true);
+    const [visible, setVisible] = React.useState(marker.isActive);
     useEffect(()=>{
-        marker.addListener("visibilitychange", ()=>{
-            setVisible(marker.getMarkerVisibility());
+        marker.addListener("activechange", ()=>{
+            setVisible(marker.isActive);
         }, true)
     },[]);
 
@@ -23,7 +23,6 @@ export default class Marker extends MapObject{
     protected marker : L.Marker;
     location: LocationPoint;
     isActive: boolean = false;
-    private visible: boolean = true;
 
     // @ts-ignore
     htmlElement: HTMLElement;
@@ -57,41 +56,21 @@ export default class Marker extends MapObject{
             const htmlRoot = ReactDOM.createRoot(htmlElement);
             htmlRoot.render(<MarkerContainer marker={this} map={this.map} element={this.reactElement}/>)
 
-        // Disable click propagation to leaflet map
-        L.DomEvent.disableClickPropagation(this.htmlElement);
-        
+            // Disable click propagation to leaflet map
+            L.DomEvent.disableClickPropagation(this.htmlElement);
+            
         })
-        this.marker.addTo(map);
-        this.setActive(true, true);
+
+        this.setActive(true);
 
     }
 
 
-    getMarkerVisibility(){
-        return this.visible;
-    }
 
     setLocation(location: LocationPoint){
         super.setLocation(location);
         this.marker.setLatLng(this.location);
     }
-
-
-    setActive(isActive: boolean, force: boolean = false) : any{
-        this.setMarkerVisibility(isActive);
-        if(!super.setActive(isActive, force)) return;
-
-    }
-
-    setMarkerVisibility(visible: boolean){
-        this.visible = visible;
-
-        this.callEventCallback("visibilitychange", visible);
-
-
-    }
-
-
 
     getLeafletMarker(){
         return this.marker;
@@ -101,10 +80,22 @@ export default class Marker extends MapObject{
         super.setParent(layer);
     }
 
+    initialize() {
+        const added = super.initialize();
+
+        this.marker.addTo(this.map);
+        
+
+        return added;
+    }
+
     delete(): void {
         super.delete();
+        
         this.marker.remove();
     }
+
+    
 
     
 
