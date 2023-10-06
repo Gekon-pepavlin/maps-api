@@ -47,6 +47,7 @@ class Cluster{
     private _onRelase?: ()=>void;
 
     private isActive = false;
+    private isInnerInitialized = false;
 
     constructor(
         map: MapOptions,
@@ -118,6 +119,7 @@ class Cluster{
             cluster.initialize();
         });
 
+        this.isInnerInitialized = true;
     }
 
     public initializeObjects(){
@@ -135,6 +137,7 @@ class Cluster{
     }
 
     private _display(zoom: number, force?: boolean){
+        if(!this.isInnerInitialized) return;
         if (zoom >= this.startZoom && zoom <= this.endZoom && this.clusters.length>0 && this.isActive){
             this.marker?.setActive(true);
             this.marker?.initialize();
