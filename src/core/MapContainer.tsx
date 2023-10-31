@@ -1,4 +1,4 @@
-import React, { Children, Ref, cloneElement, useCallback } from 'react'
+import React, { Children, Ref, cloneElement, useCallback, useRef } from 'react'
 // import "./map.css"
 import useMap from './useMap';
 
@@ -6,13 +6,14 @@ export interface MapProps{
     style?: React.CSSProperties,
     children?: React.ReactNode
 }
-export default function MapContainer(ref: any, onMountChange?: ()=>void) {
+export default function MapContainer(ref:React.MutableRefObject<null>,onMountChange: (e: HTMLElement)=>void) {
+
   let initialized = false;
 
   return (props: MapProps) => {
     return (
 
-    <div style={{...props.style, overflow: "hidden", position: "absolute", left: 0, top: 0, right: 0, bottom: 0}} >
+    <div style={{...props.style, overflow: "hidden", width:"100%", height: "100%"}} >
         <div style={{position: "relative", height: "100%"}}>
 
             {/*Div for map to render*/}
@@ -33,8 +34,9 @@ export default function MapContainer(ref: any, onMountChange?: ()=>void) {
 
               if(initialized) return;
               initialized = true;
-              
-              onMountChange?.()
+
+              if(ref.current === null) return;
+              onMountChange(ref.current);
             }}/>
 
         </div>

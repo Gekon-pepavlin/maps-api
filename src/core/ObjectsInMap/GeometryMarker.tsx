@@ -1,8 +1,8 @@
 import L from "leaflet";
-import { LocationPoint } from "./LocationPoint";
+import { LocationPoint } from "../LocationPoint";
 import Marker from "./Marker";
 import { GeometryType } from './Geometry';
-import { MapOptions } from "./MapObject";
+import { MapOptions } from "./ObjectInMap";
 
 export default class GeometryMarker extends Marker{
     private leafletObject: L.Polygon | L.Polyline;
@@ -74,12 +74,18 @@ export default class GeometryMarker extends Marker{
         
     }
 
-    initialize(): boolean {
+    initialize() {
         const added = super.initialize();
 
         this.setActive(this.isActive, true);
 
-        return added;
+        return this;
+    }
+
+    delete(): void {
+        super.delete();
+        
+        this.leafletObject.removeFrom(this.map);
     }
 
     getPoints(): LocationPoint[][]{
@@ -101,6 +107,3 @@ export default class GeometryMarker extends Marker{
     }
 }
 
-export function createGeometryMarker( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement, map: MapOptions){
-    return new GeometryMarker(points, type, marker, map);
-}

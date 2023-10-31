@@ -1,249 +1,133 @@
-import { v4 as uuid } from 'uuid';
-import { LocationPoint } from './LocationPoint';
+import L from "leaflet";
+import { LocationPoint } from "./LocationPoint";
+import Marker from "./ObjectsInMap/Marker";
+import { MapOptions } from "./ObjectsInMap/ObjectInMap";
+import Geometry, { GeometryType } from "./ObjectsInMap/Geometry";
+import GeometryMarker from "./ObjectsInMap/GeometryMarker";
+import MarkerLayer from "./ObjectsInMap/MarkerLayer";
+import ClusterMarkerLayer, { ClusterMarkerLayerProps } from "./ObjectsInMap/ClusterMarkerLayer";
 
-export type MapOptions = L.Map;
-
-
-type EventName = "activechange" | "childrenchange" | "locationchange";
 export default class MapObject{
-    name: string;
-    id: string;
+    private projection: L.CRS;
+    private transform: (location: LocationPoint) => LocationPoint;
+    private maxZoom : number;
 
-
-    parent: MapObject | undefined;
-    protected children: MapObject[] = [];
-    protected location: LocationPoint;
-
-    private useAverageLocation: boolean = true;
-
-    map: MapOptions;
-
-    isActive: boolean = true;
-    isInitialized: boolean = false;
-
-
-    private eventCallbacks: Record<string, ((e: any)=>void)[]> = {};
-
-
-    get hasParent(){
-        return this.parent !== undefined
+    initialized = false;
+    private map: L.Map = undefined as any;
+    constructor(props: MapObjectProps){
+        this.projection = props.crs;
+        this.transform = props.transform;
+        // @ts-ignore
+        this.maxZoom = this.projection.options.resolutions.length - 2;
     }
+
+    private initialize(htmlElement: HTMLElement, callbacks: Partial<MapObjectCallbacks>){
+        try{
+            const newMap = L.map(htmlElement, {
+                zoomControl: false,
+                crs: this.projection,
+                maxZoom: this.maxZoom , // Because of the bug
     
-    private dontForgetTimeout;
-
-    constructor(map: MapOptions, name: string = "MapObject"){
-        this.name = name;
-        this.id = uuid();
-
-        // Attach map
-        this.map = map;
-        this.setMap(map);
-
-        this.location = [0,0];
-
-
-        this.dontForgetTimeout = setTimeout(()=>{
-            if(!this.isInitialized) 
-                console.warn("Don't forget to call initialize() on", this.name, "object.")
-        }, 5000)
-    }
-
-    toString(){
-        return this.name
-    }
-
-    getLocation(){
-        return this.location;
-    }
-
-    setLocation(location: LocationPoint){
-        if(this.location[0] === location[0] && this.location[1] === location[1]) return;
-        
-        this.location = location
-        this.callEventCallback("locationchange", this.location);
-        this.parent?.recalculateLocation();
-    }
-
-    protected setMap(map: L.Map){
-        this.map = map;
-    }
-    protected add(child: MapObject | MapObject[]){
-        if(child instanceof Array){
-            child.forEach( (c)=>{
-                this._add(c);
-            })
-        }else{
-            this._add(child);
-        }
-    }
-    private _add(child: MapObject){
-        this.children.push(child);
-        child._setParent(this);
-
-        this.recalculateLocation()
-        this.callEventCallback("childrenchange", this.children);
-
-    }
-    protected remove(child: MapObject){
-        const index = this.children.indexOf(child);
-        if(index>=0){
-            this.children[index].parent = undefined
-            // remove from array
-            this.children.splice(index, 1);
-
-        }else{
-            console.log("Child not found.")
-        }
-
-        this.recalculateLocation()
-        this.callEventCallback("childrenchange", this.children);
-
-    }
-
-    private recalculateLocation(){
-        if(this.children.length==0) return;
-
-        if(!this.useAverageLocation){
-            const middleObject = this.children[Math.floor(this.children.length/2)];
-            const location = middleObject.getLocation();
-            this.setLocation(location);
-            return;
-        }
-
-        let sum = {lat: 0, lng: 0};
-
-        this.children.forEach( (child: MapObject)=>{
-            const location = child.getLocation();
-            sum.lat += location[0];
-            sum.lng += location[1];
-        }
-        );
-        sum.lat = sum.lat / this.children.length;
-        sum.lng = sum.lng / this.children.length;
-
-        const finalLocation = [sum.lat, sum.lng];
-
-        if(this.location[0] === finalLocation[0] && this.location[1] === finalLocation[1]) return;
-
-        this.setLocation([sum.lat, sum.lng]);
-    }
-
-    private _setParent(parent?: MapObject){
-        if(!parent){
-            console.log("Parent is undefined");
-            return;
-        }
-
-        else if(this.parent === parent){
-            return;
-        }
-        
-        else if(this.hasParent){
-            this.parent?.remove(this)
-        }
-
-        this.parent = parent;
-        this.parent.setMap(this.map);
-    }
-    protected setParent(parent?: MapObject){
-        this._setParent(parent);
-
-        if(!this.parent){
-            console.log("Parent is undefined");
-            return;
-        }
-
-        this.parent.add(this);
-    }
-
-    addListener(event: EventName | any, callback: (e: any)=>void, callOnAdd: boolean = false){
-        if(!this.eventCallbacks[event]) this.eventCallbacks[event] = [];
-        this.eventCallbacks[event].push(callback);
-
-        if(callOnAdd) this.callEventCallback(event, null);
-    }
-
-    protected callEventCallback(event: EventName | any, e: any){
-        if(!this.eventCallbacks[event]) return;
-        this.eventCallbacks[event].forEach( (callback)=>{
-            callback(e);
-        })
-    }
-
-
-
-    setActive(isActive: boolean, force: boolean = false, ignoreChildren = false) : any{
-        if(!this.map){
-            console.log("Cannot change active property because map is not attached");
-            return;
-        };
-        if(!force && isActive === this.isActive) return;
-        this.isActive = isActive;
-
-        if(!ignoreChildren){
-            this.children.forEach( (child)=>{
-                child.setActive(isActive, force);
             });
-        }
-
-        if(this.hasParent) this.parent?.onChildrenActiveChange();
-
-        this.callEventCallback("activechange", this.isActive);
-        return true;
-    }
-
-    removeListener(event: EventName | any, callback: (e: any)=>void){
-        if(!this.eventCallbacks[event]) return;
-
-        const index = this.eventCallbacks[event].indexOf(callback);
-        if(index>=0){
-            this.eventCallbacks[event].splice(index, 1);
-        }
-    }
-
-
+            newMap.setView([50.018127619248084, 14.296341504868012], this.maxZoom/2);
+            
     
-    protected onChildrenActiveChange(){
-        let allSame = true;
-        let first = true;
-        let lastIsActive : boolean = true;
+            L.tileLayer.wms("https://geoportal.cuzk.cz/WMS_ORTOFOTO_PUB/WMService.aspx", {
+                layers: "GR_ORTFOTORGB",
+                maxZoom : this.maxZoom, 
+                styles: "",
+                format: "image/png",
+                transparent: true,
+                version: "1.3.0",
+                attribution: "ČÚZK"
+            }).addTo(newMap);
 
-        for(let i=0; i<this.children.length; i++){
-            const l = this.children[i];
-
-
-            if(!first && lastIsActive != l.isActive) allSame = false;
-
-            first = false;
-            lastIsActive = l.isActive;
+            this.map = newMap;
+        }catch(e){
+            console.error(e);
         }
 
-        if(!first && allSame) this.setActive(lastIsActive)
-        
+        this.initialized = true;
+
+        this.initializeCallbacks(callbacks);
+
     }
-
-    initialize(){
-        const inMap = this.isInitialized;
-
-        this.children.forEach( (child)=>{
-            child.initialize();
-        });
-
-        clearTimeout(this.dontForgetTimeout);
-
-        this.isInitialized = true;
-        return inMap !== this.isInitialized;
-    }
-    delete(){
-        if(this.hasParent) this.parent?.remove(this);
-        this.children.forEach( (child)=>{
-            child.delete();
+    private initializeCallbacks(callbacks: Partial<MapObjectCallbacks>){
+        this.map.on("zoomend", ()=>{
+            callbacks.onZoomChange?.(this.map.getZoom());
         })
-        this.isInitialized = false;
+
+
+        callbacks.onLoad?.(this);
     }
 
-    setUseAverageLocation(useAverageLocation: boolean){
-        this.useAverageLocation = useAverageLocation;
-        this.recalculateLocation();
+    private checkIfInitialized(){
+        if(!this.initialized){
+            throw new Error("Map is not initialized yet. Try to use useMap.");
+        }
     }
+
+
+    createMarker = (location: LocationPoint, marker: (marker: Marker, map: MapOptions)=>React.ReactElement) => {
+        this.checkIfInitialized();
+
+        const loc = this.transform(location);
+        const m = new Marker(loc[0], loc[1], marker, this.map) ;
+        return m;
+    }
+
+    createGeometry = (points: LocationPoint[][], type : GeometryType) => {
+        this.checkIfInitialized();
+
+        const m = new Geometry(points.map((p)=>{
+            return p.map((p)=>{
+                const loc = this.transform(p);
+                return [loc[0], loc[1]];
+            })
+        }), type, this.map);
+        return m;
+    }
+
+    createGeometryMarker = (points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement) => {
+        this.checkIfInitialized();
+        const m = new GeometryMarker(points.map((p)=>{
+            return p.map((p)=>{
+                const loc = this.transform(p);
+                return [loc[0], loc[1]];
+            })
+        }), type, marker, this.map) ;
+        return m;
+    }
+
+    createLayer = () => {
+        this.checkIfInitialized();
+        const l = new MarkerLayer(this.map);
+        return l;
+
+    }
+
+    createClusterLayer = (element: (count: number)=>React.ReactElement, options?: Partial<ClusterMarkerLayerProps>) => {
+        this.checkIfInitialized();
+        const l = new ClusterMarkerLayer(element, this.map, options);
+        return l;
+    }
+}
+
+export interface MapObjectCallbacks{
+    onLoad: (map: MapObject)=>void,
+    onZoomChange: (zoom: number)=>void,
+
+}
+
+export interface CustomProjection{
+    crs: L.CRS,
+    transform: (location: LocationPoint) => LocationPoint
+}
+
+interface MapObjectProps extends CustomProjection{
+
+}
+
+export function createMap(props: MapObjectProps) : MapObject{
+    return new MapObject(props);
 }

@@ -1,10 +1,10 @@
 import 'leaflet.markercluster';
-import MapObject, { MapOptions } from "./MapObject";
+import ObjectInMap, { MapOptions } from "./ObjectInMap";
 import MarkerLayer from './MarkerLayer';
 import Marker from './Marker';
 import React from 'react';
 import { v4 as uuid } from 'uuid';
-import { LocationPoint } from './LocationPoint';
+import { LocationPoint } from '../LocationPoint';
 
 
 type GroupsDict = Record<number, Record<number, Group>>;
@@ -13,7 +13,7 @@ interface Group{
     x: number;
     y: number;
     zoom: number;
-    objects: MapObject[];
+    objects: ObjectInMap[];
     groupsDict: GroupsDict;
     groups: Group[];
 }
@@ -22,7 +22,7 @@ interface ClusterData{
     startZoom: number;
     endZoom: number;
     clusters: ClusterData[];
-    objects: MapObject[];
+    objects: ObjectInMap[];
 }
 
 class Cluster{
@@ -32,7 +32,7 @@ class Cluster{
     radius: number;
     startZoom: number;
     endZoom: number;
-    objects: MapObject[];
+    objects: ObjectInMap[];
     clusters: Cluster[] = [];
     parentCluster?: Cluster;
 
@@ -57,7 +57,7 @@ class Cluster{
         useAverageLocation: boolean,
         startZoom: number,
         endZoom: number,
-        objects: MapObject[],
+        objects: ObjectInMap[],
         clustersData: ClusterData[],
         reactElement: (count:number)=>React.ReactElement,
         parentCluster?: Cluster
@@ -239,7 +239,16 @@ function createCluster(data: ClusterData, map: MapOptions, radiusInPixels: numbe
     return cluster;
 }
 
-export default class ClusterMarkerLayer extends MapObject{
+export interface ClusterMarkerLayerProps{
+    radius: number;
+    useAverageLocation: boolean;
+}
+
+const defaultClusterMarkerLayerProps : ClusterMarkerLayerProps = {
+    radius: 200,
+    useAverageLocation: true
+}
+export default class ClusterMarkerLayer extends ObjectInMap{
     protected clusterReactElement: (count:number)=>React.ReactElement;
 
     private radius: number;
@@ -250,17 +259,19 @@ export default class ClusterMarkerLayer extends MapObject{
     private mainClusters: Cluster[] = [];
     private clustersByZoom: Record<number, Cluster[]> = {};
 
-    private objects: MapObject[] = [];
+    private objects: ObjectInMap[] = [];
 
     private _onZoomEnd = this._onZoomChange.bind(this);
 
-    constructor(reactElement: (count:number)=>React.ReactElement, map: MapOptions, radiusInPixels: number = 200, averageLocation: boolean = false){
+    constructor(reactElement: (count:number)=>React.ReactElement, map: MapOptions, options?: Partial<ClusterMarkerLayerProps>){
         super(map,"ClusterLayer");
 
-        this.clusterReactElement = reactElement;
-        this.radius = radiusInPixels;
+        const props : ClusterMarkerLayerProps = {...defaultClusterMarkerLayerProps, ...options};
 
-        this._useAverageLocation = averageLocation;
+        this.clusterReactElement = reactElement;
+        this.radius = props.radius;
+
+        this._useAverageLocation = props.useAverageLocation;
 
         // This marker fix the bug. If all submarker is not active, this is. The layer stays active
         const justMarker = new Marker(30,30,()=>{
@@ -295,7 +306,7 @@ export default class ClusterMarkerLayer extends MapObject{
     }
 
 
-    add(marker: MapObject | MapObject[]){
+    add(marker: ObjectInMap | ObjectInMap[]){
         super.add(marker);
         
         if(Array.isArray(marker)){
@@ -309,7 +320,7 @@ export default class ClusterMarkerLayer extends MapObject{
     }
 
 
-    private _set(markers: MapObject[]){
+    private _set(markers: ObjectInMap[]){
 
         markers.forEach((marker)=>{
             marker.setActive(false);
@@ -348,7 +359,7 @@ export default class ClusterMarkerLayer extends MapObject{
     }
     //#region SPLIT_TO_CLUSTERS functions
 
-    private _splitToClusters(markers: MapObject[]) : ClusterData[]{
+    private _splitToClusters(markers: ObjectInMap[]) : ClusterData[]{
         
 
 
@@ -446,7 +457,7 @@ export default class ClusterMarkerLayer extends MapObject{
 
     }
 
-    initialize(): boolean {
+    initialize() {
         const r = super.initialize();
 
         this.mainClusters.forEach((cluster)=>{
@@ -455,7 +466,7 @@ export default class ClusterMarkerLayer extends MapObject{
 
         this._onZoomEnd()
 
-        return r;
+        return this;
     }
     delete(): void {
         super.delete();

@@ -1,7 +1,9 @@
-import MarkerLayer from './core/MarkerLayer';
-import Marker from "./core/Marker";
-import { MapOptions } from './core/MapObject';
-import ClusterMarkerLayer from './core/ClusterMarkerLayer';
-import useMap from './core/useMap';
 
-export {useMap, Marker, MarkerLayer, MapOptions, ClusterMarkerLayer};
+import ClusterMarkerLayer from './core/ObjectsInMap/ClusterMarkerLayer';
+import Marker from './core/ObjectsInMap/Marker';
+import MarkerLayer from './core/ObjectsInMap/MarkerLayer';
+import { MapOptions } from './core/ObjectsInMap/ObjectInMap';
+import useMap from './core/useMap';
+import { createMap } from './core/MapObject';
+
+export {useMap, createMap, Marker, MarkerLayer, MapOptions, ClusterMarkerLayer};

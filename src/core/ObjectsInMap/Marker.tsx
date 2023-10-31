@@ -3,8 +3,8 @@ import React, { useEffect } from 'react'
 import { renderToString } from 'react-dom/server';
 import MarkerLayer from './MarkerLayer';
 import ReactDOM from 'react-dom/client';
-import { LocationPoint } from './LocationPoint';
-import MapObject, { MapOptions } from './MapObject';
+import { LocationPoint } from '../LocationPoint';
+import ObjectInMap, { MapOptions } from './ObjectInMap';
 
 const MarkerContainer = ({marker, map, element}:{marker: Marker, map: MapOptions, element: (marker:Marker, map:MapOptions)=>React.ReactElement}) => {
     const [visible, setVisible] = React.useState(marker.isActive);
@@ -19,7 +19,7 @@ const MarkerContainer = ({marker, map, element}:{marker: Marker, map: MapOptions
     </div>
 }
 
-export default class Marker extends MapObject{
+export default class Marker extends ObjectInMap{
     protected marker : L.Marker;
     location: LocationPoint;
     isActive: boolean = false;
@@ -87,7 +87,7 @@ export default class Marker extends MapObject{
         this.marker.addTo(this.map);
         
 
-        return added;
+        return this;
     }
 
     delete(): void {
@@ -100,8 +100,4 @@ export default class Marker extends MapObject{
 
     
 
-}
-
-export function createMarker(latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement, map: MapOptions){
-    return new Marker(latitude, longitude, marker, map);
 }
