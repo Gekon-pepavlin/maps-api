@@ -1,4 +1,4 @@
-import 'leaflet.markercluster';
+// import 'leaflet.markercluster'; 
 import ObjectInMap, { MapOptions } from "./ObjectInMap";
 import MarkerLayer from './MarkerLayer';
 import Marker from './Marker';
