@@ -13,7 +13,7 @@ export default class MapObject{
     private maxZoom : number;
 
     initialized = false;
-    private map: L.Map = undefined as any;
+    public map: L.Map = undefined as any;
     constructor(props: MapObjectProps){
         this.projection = props.crs;
         this.transform = props.transform;
