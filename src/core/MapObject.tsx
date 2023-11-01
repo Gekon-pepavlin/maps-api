@@ -12,6 +12,8 @@ export default class MapObject{
     private transform: (location: LocationPoint) => LocationPoint;
     private maxZoom : number;
 
+    private callbacks: Partial<MapObjectCallbacks>[] = [];
+
     initialized = false;
     public map: L.Map = undefined as any;
     constructor(props: MapObjectProps){
@@ -19,6 +21,25 @@ export default class MapObject{
         this.transform = props.transform;
         // @ts-ignore
         this.maxZoom = this.projection.options.resolutions.length - 2;
+    }
+
+
+    public addListener(event: Partial<MapObjectCallbacks>){
+        this.callbacks.push(event);
+
+        this.map.on("zoomend", ()=>{
+            this.callbacks.forEach(element => {
+                element.onZoomChange?.(this.map.getZoom());
+            });
+            
+        })
+
+    }
+
+    public removeListener(event: Partial<MapObjectCallbacks>){
+        this.callbacks = this.callbacks.filter((e)=>e !== event);
+
+        
     }
 
     private initialize(htmlElement: HTMLElement, callbacks: Partial<MapObjectCallbacks>){
@@ -53,12 +74,12 @@ export default class MapObject{
 
     }
     private initializeCallbacks(callbacks: Partial<MapObjectCallbacks>){
-        this.map.on("zoomend", ()=>{
-            callbacks.onZoomChange?.(this.map.getZoom());
-        })
-
-
-        callbacks.onLoad?.(this);
+        
+        this.addListener(callbacks);
+        
+        this.callbacks.forEach(element => {
+            element.onLoad?.(this);
+        });
     }
 
     private checkIfInitialized(){
