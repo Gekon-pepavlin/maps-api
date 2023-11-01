@@ -13,6 +13,7 @@ export default class MapObject{
     private maxZoom : number;
 
     private callbacks: Partial<MapObjectCallbacks>[] = [];
+    private notAddedCallbacks: Partial<MapObjectCallbacks>[] = [];
 
     initialized = false;
     public map: L.Map = undefined as any;
@@ -25,8 +26,13 @@ export default class MapObject{
 
 
     public addListener(event: Partial<MapObjectCallbacks>){
-        this.callbacks.push(event);
 
+        if(!this.map){
+            this.notAddedCallbacks.push(event);
+            return;
+        }else{
+            this.callbacks.push(event);
+        }
         this.map.on("zoomend", ()=>{
             this.callbacks.forEach(element => {
                 element.onZoomChange?.(this.map.getZoom());
@@ -39,7 +45,7 @@ export default class MapObject{
     public removeListener(event: Partial<MapObjectCallbacks>){
         this.callbacks = this.callbacks.filter((e)=>e !== event);
 
-        
+
     }
 
     private initialize(htmlElement: HTMLElement, callbacks: Partial<MapObjectCallbacks>){
@@ -76,6 +82,11 @@ export default class MapObject{
     private initializeCallbacks(callbacks: Partial<MapObjectCallbacks>){
         
         this.addListener(callbacks);
+
+        this.notAddedCallbacks.forEach((e)=>{
+            this.addListener(e);
+        })
+        this.notAddedCallbacks = [];
         
         this.callbacks.forEach(element => {
             element.onLoad?.(this);
