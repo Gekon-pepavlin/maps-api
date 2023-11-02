@@ -6,11 +6,14 @@ import Geometry, { GeometryType } from "./ObjectsInMap/Geometry";
 import GeometryMarker from "./ObjectsInMap/GeometryMarker";
 import MarkerLayer from "./ObjectsInMap/MarkerLayer";
 import ClusterMarkerLayer, { ClusterMarkerLayerProps } from "./ObjectsInMap/ClusterMarkerLayer";
+import { MapObjectProps, defaultMapObjectProps } from "./MapObjectProps";
 
 export default class MapObject{
     private projection: L.CRS;
     private transform: (location: LocationPoint) => LocationPoint;
     private maxZoom : number;
+
+    private props: MapObjectProps;
 
     private callbacks: Partial<MapObjectCallbacks>[] = [];
     private notAddedCallbacks: Partial<MapObjectCallbacks>[] = [];
@@ -18,10 +21,12 @@ export default class MapObject{
     initialized = false;
     public map: L.Map = undefined as any;
     constructor(props: MapObjectProps){
-        this.projection = props.crs;
-        this.transform = props.transform;
+        this.projection = props.projection.crs;
+        this.transform = props.projection.transform;
         // @ts-ignore
         this.maxZoom = this.projection.options.resolutions.length - 2;
+
+        this.props = props;
     }
 
 
@@ -72,6 +77,13 @@ export default class MapObject{
             this.map = newMap;
         }catch(e){
             console.error(e);
+        }
+
+        if(this.props.showMapScale){
+            L.control.scale({
+                imperial: false,
+                maxWidth: 100,
+              }).addTo(this.map);
         }
 
         this.initialized = true;
@@ -151,15 +163,11 @@ export interface MapObjectCallbacks{
 
 }
 
-export interface CustomProjection{
-    crs: L.CRS,
-    transform: (location: LocationPoint) => LocationPoint
-}
 
-interface MapObjectProps extends CustomProjection{
-
-}
-
-export function createMap(props: MapObjectProps) : MapObject{
-    return new MapObject(props);
+export function createMap(props: Partial<MapObjectProps>) : MapObject{
+    const propsWithDefaults = {
+        ...defaultMapObjectProps,
+        ...props,
+    }
+    return new MapObject(propsWithDefaults);
 }
