@@ -1,6 +1,6 @@
 {
   "name": "maps-api",
-  "version": "1.8.962",
+  "version": "1.8.97",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

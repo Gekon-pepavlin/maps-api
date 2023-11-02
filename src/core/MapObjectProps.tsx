@@ -14,7 +14,7 @@ export interface MapObjectProps{
 
 export const defaultMapObjectProps : MapObjectProps = {
     projection: {
-        crs: L.CRS.Simple,
+        crs: L.CRS.EPSG3395,
           transform: (location: LocationPoint) => {
             return [location[0], location[1]]
           }

@@ -23,8 +23,14 @@ export default class MapObject{
     constructor(props: MapObjectProps){
         this.projection = props.projection.crs;
         this.transform = props.projection.transform;
+
         // @ts-ignore
-        this.maxZoom = this.projection.options.resolutions.length - 2;
+        if(!this.projection.options){
+            this.maxZoom = 18;
+        }else{
+            // @ts-ignore
+            this.maxZoom = this.projection.options.resolutions.length - 2;
+        }
 
         this.props = props;
     }
