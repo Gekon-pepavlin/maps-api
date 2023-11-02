@@ -1,4 +1,6 @@
 import * as L from "leaflet"
+import {} from "proj4leaflet"
+
 
 import { LocationPoint } from "./LocationPoint"
 
