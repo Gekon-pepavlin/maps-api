@@ -1,6 +1,6 @@
 # Maps API
 
-Maps API is a powerful tool for integrating interactive and customizable maps into your web applications. Whether you need to display geographical data, create custom map visualizations, or provide location-based services, Maps API has you covered.
+Maps API is a powerful tool for integrating interactive and customizable maps into your **react** web applications. Whether you need to display geographical data, create custom map visualizations, or provide location-based services, Maps API has you covered.
 
 ## Quick Start
 
