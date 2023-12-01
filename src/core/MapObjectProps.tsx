@@ -9,7 +9,7 @@ export interface CustomProjection{
 
 export interface MapObjectProps{
     projection: CustomProjection,
-    showMapScale: boolean,
+    startLocation: LocationPoint
 }
 
 export const defaultMapObjectProps : MapObjectProps = {
@@ -19,5 +19,5 @@ export const defaultMapObjectProps : MapObjectProps = {
             return [location[0], location[1]]
           }
     },
-    showMapScale: true
+    startLocation: [50.018127619248084, 14.296341504868012]
 }

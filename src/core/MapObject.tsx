@@ -67,11 +67,11 @@ export default class MapObject{
                 maxZoom: this.maxZoom , // Because of the bug
     
             });
-            newMap.setView([50.018127619248084, 14.296341504868012], this.maxZoom/2);
+            newMap.setView(this.props.startLocation, this.maxZoom/2);
             
     
-            L.tileLayer.wms("https://geoportal.cuzk.cz/WMS_ORTOFOTO_PUB/WMService.aspx", {
-                layers: "GR_ORTFOTORGB",
+            L.tileLayer.wms("https://services.cuzk.cz/wms/local-KM-wms.asp", {
+                layers: "RST_KN,RST_KMD,parcelni_cisla,obrazy_parcel,hranice_parcel,dalsi_p_mapy",
                 maxZoom : this.maxZoom, 
                 styles: "",
                 format: "image/png",
@@ -80,17 +80,12 @@ export default class MapObject{
                 attribution: "ČÚZK"
             }).addTo(newMap);
 
+
             this.map = newMap;
         }catch(e){
             console.error(e);
         }
 
-        if(this.props.showMapScale){
-            L.control.scale({
-                imperial: false,
-                maxWidth: 100,
-              }).addTo(this.map);
-        }
 
         this.initialized = true;
 
