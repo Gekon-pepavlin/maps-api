@@ -1,10 +1,19 @@
 import { v4 as uuid } from 'uuid';
 import { LocationPoint } from '../LocationPoint';
+import { defaultMapObjectProps } from '../MapObjectProps';
 
 export type MapOptions = L.Map;
 
+export interface ObjectInMapProps{
+    useAverageLocation: boolean;
+}
 
-type EventName = "activechange" | "childrenchange" | "locationchange";
+const defaultObjectInMapProps: ObjectInMapProps = {
+    useAverageLocation: true
+}
+
+type EventName = "activechange" | "childrenchange" | "locationchange"
+                | "click" | "mouseover" | "mouseleave";
 export default class ObjectInMap{
     name: string;
     id: string;
@@ -14,7 +23,7 @@ export default class ObjectInMap{
     protected children: ObjectInMap[] = [];
     protected location: LocationPoint;
 
-    private useAverageLocation: boolean = true;
+    protected useAverageLocation: boolean;
 
     map: MapOptions;
 
@@ -31,13 +40,20 @@ export default class ObjectInMap{
     
     private dontForgetTimeout: NodeJS.Timeout | undefined;
 
-    constructor(map: MapOptions, name: string = "MapObject"){
+    constructor(map: MapOptions, name: string = "MapObject", options? : Partial<ObjectInMapProps>){
+
+        const props : ObjectInMapProps = {...defaultObjectInMapProps, ...options};
+        this.useAverageLocation = props.useAverageLocation;
+
         this.name = name;
         this.id = uuid();
 
         // Attach map
         this.map = map;
         this.setMap(map);
+
+
+
 
         this.location = [0,0];
 
@@ -109,26 +125,28 @@ export default class ObjectInMap{
 
     }
 
-    private recalculateLocation(){
-        if(this.children.length==0) return;
+    protected recalculateLocation(children?: LocationPoint[]){
+        if(!children) children = this.children.map( (child)=>{
+            return child.getLocation();
+        });
+        if(children.length==0) return;
 
         if(!this.useAverageLocation){
-            const middleObject = this.children[Math.floor(this.children.length/2)];
-            const location = middleObject.getLocation();
+            const middleObject = children[Math.floor(children.length/2)];
+            const location = middleObject;
             this.setLocation(location);
             return;
         }
 
         let sum = {lat: 0, lng: 0};
 
-        this.children.forEach( (child: ObjectInMap)=>{
-            const location = child.getLocation();
+        children.forEach( (location: LocationPoint)=>{
             sum.lat += location[0];
             sum.lng += location[1];
         }
         );
-        sum.lat = sum.lat / this.children.length;
-        sum.lng = sum.lng / this.children.length;
+        sum.lat = sum.lat / children.length;
+        sum.lng = sum.lng / children.length;
 
         const finalLocation = [sum.lat, sum.lng];
 
@@ -167,14 +185,14 @@ export default class ObjectInMap{
         this.parent.add(this);
     }
 
-    addListener(event: EventName | any, callback: (e: any)=>void, callOnAdd: boolean = false){
+    addListener(event: EventName, callback: (e: any)=>void, callOnAdd: boolean = false){
         if(!this.eventCallbacks[event]) this.eventCallbacks[event] = [];
         this.eventCallbacks[event].push(callback);
 
         if(callOnAdd) this.callEventCallback(event, null);
     }
 
-    protected callEventCallback(event: EventName | any, e: any){
+    callEventCallback(event: EventName, e: any){
         if(!this.eventCallbacks[event]) return;
         this.eventCallbacks[event].forEach( (callback)=>{
             callback(e);
@@ -203,7 +221,7 @@ export default class ObjectInMap{
         return true;
     }
 
-    removeListener(event: EventName | any, callback: (e: any)=>void){
+    removeListener(event: EventName, callback: (e: any)=>void){
         if(!this.eventCallbacks[event]) return;
 
         const index = this.eventCallbacks[event].indexOf(callback);

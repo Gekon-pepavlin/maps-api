@@ -2,7 +2,7 @@ import L from "leaflet";
 import { LocationPoint } from "../LocationPoint";
 import Marker from "./Marker";
 import { GeometryType } from './Geometry';
-import { MapOptions } from "./ObjectInMap";
+import { MapOptions, ObjectInMapProps } from "./ObjectInMap";
 
 export default class GeometryMarker extends Marker{
     private leafletObject: L.Polygon | L.Polyline;
@@ -14,8 +14,8 @@ export default class GeometryMarker extends Marker{
     private geometryType: GeometryType;
     
     constructor( points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: any)=>React.ReactElement, 
-        map: MapOptions, name: string = "GeometryMarker"){
-        super(0,0, marker as (marker: Marker, map: any)=>React.ReactElement, map, name);
+        map: MapOptions, name: string = "GeometryMarker", options?: Partial<ObjectInMapProps>){
+        super(0,0, marker as (marker: Marker, map: any)=>React.ReactElement, map, name, options);
 
         this.leafletObject = type == "polygon" ? L.polygon(points) : L.polyline(points);  
         this.geometryType = type;
@@ -41,6 +41,17 @@ export default class GeometryMarker extends Marker{
             // Disable click propagation to leaflet map
             this.leafletObject.on("click", (e: any)=>{
                 L.DomEvent.disableClickPropagation(e.target);
+                this.callEventCallback("click", e);
+            });
+
+            this.leafletObject.on("mouseover", (e: any)=>{
+                L.DomEvent.disableClickPropagation(e.target);
+                this.callEventCallback("mouseover", e);
+            });
+
+            this.leafletObject.on("mouseleave", (e: any)=>{
+                L.DomEvent.disableClickPropagation(e.target);
+                this.callEventCallback("mouseleave", e);
             });
 
 
@@ -54,21 +65,21 @@ export default class GeometryMarker extends Marker{
         if(this.isActive){
             // Save and set the center of the polygon   
             
-            let sum = {lat: 0, lng: 0};
 
             const flatten = this.points.flat();
-            if(flatten.length > 0){
-                flatten.forEach( (point: LocationPoint)=>{
-                    sum.lat += point[0];
-                    sum.lng += point[1];
-                });
-                sum.lat = sum.lat / flatten.length;
-                sum.lng = sum.lng / flatten.length;
+            this.recalculateLocation(flatten);
+            // if(flatten.length > 0){
+            //     flatten.forEach( (point: LocationPoint)=>{
+            //         sum.lat += point[0];
+            //         sum.lng += point[1];
+            //     });
+            //     sum.lat = sum.lat / flatten.length;
+            //     sum.lng = sum.lng / flatten.length;
 
-            }
-            const center = sum;
-            this.marker.setLatLng(center);
-            this.location = [center.lat, center.lng];  
+            // }
+            // const center = sum;
+            // this.marker.setLatLng(center);
+            // this.location = [center.lat, center.lng];  
         
         }
         

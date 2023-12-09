@@ -4,17 +4,38 @@ import { renderToString } from 'react-dom/server';
 import MarkerLayer from './MarkerLayer';
 import ReactDOM from 'react-dom/client';
 import { LocationPoint } from '../LocationPoint';
-import ObjectInMap, { MapOptions } from './ObjectInMap';
+import ObjectInMap, { MapOptions, ObjectInMapProps } from './ObjectInMap';
 
 const MarkerContainer = ({marker, map, element}:{marker: Marker, map: MapOptions, element: (marker:Marker, map:MapOptions)=>React.ReactElement}) => {
     const [visible, setVisible] = React.useState(marker.isActive);
+
+    const onClick = (e: any) => {
+        e.stopPropagation();
+        marker.callEventCallback("click", e);
+    }
+
+    const onMouseOver = (e: any) => {
+        e.stopPropagation();
+        marker.callEventCallback("mouseover", e);
+    }
+
+    const onMouseLeave = (e: any) => {
+        e.stopPropagation();
+        marker.callEventCallback("mouseleave", e);
+    }
+
     useEffect(()=>{
         marker.addListener("activechange", ()=>{
             setVisible(marker.isActive);
         }, true)
+
+
     },[]);
 
-    return <div style={{position: "absolute", display: visible?"block":"none"}}>
+    return <div style={{position: "absolute", display: visible?"block":"none"}} 
+        onClick={onClick}
+        onMouseOver={onMouseOver}
+        onMouseLeave={onMouseLeave}>
         {element(marker, map)}
     </div>
 }
@@ -30,8 +51,8 @@ export default class Marker extends ObjectInMap{
     protected reactElement: (marker: Marker, map: MapOptions)=>React.ReactElement;
 
     constructor(latitude: number, longitude: number, marker: (marker: Marker, map: MapOptions)=>React.ReactElement, 
-        map: MapOptions, name: string = "Marker"){
-        super(map, name);
+        map: MapOptions, name: string = "Marker", options?: Partial<ObjectInMapProps>){
+        super(map, name, options);
         this.reactElement = marker;
         const html = "<div></div>";
         

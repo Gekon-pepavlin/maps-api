@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react'
 import Marker from './Marker';
 import Geometry from './Geometry';
-import ObjectInMap, { MapOptions } from './ObjectInMap';
+import ObjectInMap, { MapOptions, ObjectInMapProps } from './ObjectInMap';
 
 
 export default class MarkerLayer extends ObjectInMap{
-    constructor(map: MapOptions){
-        super(map, "Layer")
+    constructor(map: MapOptions, options?: Partial<ObjectInMapProps>){
+        super(map, "Layer", options)
 
         this.setActive(true, true);
     }

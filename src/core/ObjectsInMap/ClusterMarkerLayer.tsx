@@ -1,5 +1,5 @@
 // import 'leaflet.markercluster';
-import ObjectInMap, { MapOptions } from "./ObjectInMap";
+import ObjectInMap, { MapOptions, ObjectInMapProps } from "./ObjectInMap";
 import MarkerLayer from './MarkerLayer';
 import Marker from './Marker';
 import React from 'react';
@@ -84,9 +84,9 @@ class Cluster{
 
     public initialize(){
 
-        this.markerLayer = new MarkerLayer(this.map)
-        this.markerLayer.setUseAverageLocation(this.useAverageLocation);
-
+        this.markerLayer = new MarkerLayer(this.map,{
+            useAverageLocation: this.useAverageLocation
+        })
         this.marker = new Marker(0,0,(marker, map)=>{
             const onClick = () =>{
                 map.flyTo(marker.getLocation(), this.endZoom+1);
@@ -239,9 +239,8 @@ function createCluster(data: ClusterData, map: MapOptions, radiusInPixels: numbe
     return cluster;
 }
 
-export interface ClusterMarkerLayerProps{
+export interface ClusterMarkerLayerProps extends ObjectInMapProps{
     radius: number;
-    useAverageLocation: boolean;
 }
 
 const defaultClusterMarkerLayerProps : ClusterMarkerLayerProps = {
@@ -253,8 +252,6 @@ export default class ClusterMarkerLayer extends ObjectInMap{
 
     private radius: number;
 
-    private _useAverageLocation: boolean = true;
-
 
     private mainClusters: Cluster[] = [];
     private clustersByZoom: Record<number, Cluster[]> = {};
@@ -264,14 +261,12 @@ export default class ClusterMarkerLayer extends ObjectInMap{
     private _onZoomEnd = this._onZoomChange.bind(this);
 
     constructor(reactElement: (count:number)=>React.ReactElement, map: MapOptions, options?: Partial<ClusterMarkerLayerProps>){
-        super(map,"ClusterLayer");
+        super(map,"ClusterLayer", options);
 
         const props : ClusterMarkerLayerProps = {...defaultClusterMarkerLayerProps, ...options};
 
         this.clusterReactElement = reactElement;
         this.radius = props.radius;
-
-        this._useAverageLocation = props.useAverageLocation;
 
         // This marker fix the bug. If all submarker is not active, this is. The layer stays active
         const justMarker = new Marker(30,30,()=>{
@@ -332,7 +327,7 @@ export default class ClusterMarkerLayer extends ObjectInMap{
             cluster.release();
         });
         
-        this.mainClusters = clusters.map((data) => createCluster(data, this.map, this.radius, this._useAverageLocation, this.clusterReactElement))
+        this.mainClusters = clusters.map((data) => createCluster(data, this.map, this.radius, this.useAverageLocation, this.clusterReactElement))
 
         this.mainClusters.forEach((cluster)=>{
             const allSubclusters = [cluster, ...cluster.getAllSubclusters()]; // Including itself

@@ -1,7 +1,7 @@
 import L from "leaflet";
 import { LocationPoint } from "./LocationPoint";
 import Marker from "./ObjectsInMap/Marker";
-import { MapOptions } from "./ObjectsInMap/ObjectInMap";
+import { MapOptions, ObjectInMapProps } from "./ObjectsInMap/ObjectInMap";
 import Geometry, { GeometryType } from "./ObjectsInMap/Geometry";
 import GeometryMarker from "./ObjectsInMap/GeometryMarker";
 import MarkerLayer from "./ObjectsInMap/MarkerLayer";
@@ -70,8 +70,8 @@ export default class MapObject{
             newMap.setView(this.props.startLocation, this.maxZoom/2);
             
     
-            L.tileLayer.wms("https://services.cuzk.cz/wms/local-KM-wms.asp", {
-                layers: "RST_KN,RST_KMD,parcelni_cisla,obrazy_parcel,hranice_parcel,dalsi_p_mapy",
+            L.tileLayer.wms("https://geoportal.cuzk.cz/WMS_ORTOFOTO_PUB/WMService.aspx", {
+                layers: "GR_ORTFOTORGB",
                 maxZoom : this.maxZoom, 
                 styles: "",
                 format: "image/png",
@@ -113,15 +113,15 @@ export default class MapObject{
     }
 
 
-    createMarker = (location: LocationPoint, marker: (marker: Marker, map: MapOptions)=>React.ReactElement) => {
+    createMarker = (location: LocationPoint, marker: (marker: Marker, map: MapOptions)=>React.ReactElement, options?: Partial<ObjectInMapProps>) => {
         this.checkIfInitialized();
 
         const loc = this.transform(location);
-        const m = new Marker(loc[0], loc[1], marker, this.map) ;
+        const m = new Marker(loc[0], loc[1], marker, this.map, undefined, options) ;
         return m;
     }
 
-    createGeometry = (points: LocationPoint[][], type : GeometryType) => {
+    createGeometry = (points: LocationPoint[][], type : GeometryType, options?: Partial<ObjectInMapProps>) => {
         this.checkIfInitialized();
 
         const m = new Geometry(points.map((p)=>{
@@ -129,24 +129,24 @@ export default class MapObject{
                 const loc = this.transform(p);
                 return [loc[0], loc[1]];
             })
-        }), type, this.map);
+        }), type, this.map, undefined, options);
         return m;
     }
 
-    createGeometryMarker = (points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement) => {
+    createGeometryMarker = (points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement, options?: Partial<ObjectInMapProps>) => {
         this.checkIfInitialized();
         const m = new GeometryMarker(points.map((p)=>{
             return p.map((p)=>{
                 const loc = this.transform(p);
                 return [loc[0], loc[1]];
             })
-        }), type, marker, this.map) ;
+        }), type, marker, this.map, undefined, options) ;
         return m;
     }
 
-    createLayer = () => {
+    createLayer = (options?: Partial<ObjectInMapProps>) => {
         this.checkIfInitialized();
-        const l = new MarkerLayer(this.map);
+        const l = new MarkerLayer(this.map, options);
         return l;
 
     }
