@@ -1,45 +1,71 @@
-import React, { Children, Ref, cloneElement, useCallback, useRef } from 'react'
-// import "./map.css"
-import useMap from './useMap';
+import React, { Children, Ref, cloneElement, useCallback, useRef } from "react";
 
-export interface MapProps{
-    style?: React.CSSProperties,
-    children?: React.ReactNode
+export interface MapProps {
+    style?: React.CSSProperties;
+    children?: React.ReactNode;
 }
-export default function MapContainer(ref:React.MutableRefObject<null>,onMountChange: (e: HTMLElement)=>void) {
+export function MapContainer(
+    ref: React.MutableRefObject<null>,
+    onMountChange: (e: HTMLElement) => void
+) {
+    let initialized = false;
 
-  let initialized = false;
+    return (props: MapProps) => {
+        return (
+            <div
+                style={{
+                    ...props.style,
+                    overflow: "hidden",
+                    width: "100%",
+                    height: "100%"
+                }}>
+                <div style={{ position: "relative", height: "100%" }}>
+                    {/*Div for map to render*/}
+                    <div
+                        ref={ref}
+                        style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            overflow: "hidden"
+                        }}></div>
 
-  return (props: MapProps) => {
-    return (
+                    {/*Div for panels and other custom elements*/}
+                    <div
+                        style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            pointerEvents: "none",
+                            zIndex: 500
+                        }}>
+                        {Children.map(props.children, (child: any, i) =>
+                            cloneElement(child, {
+                                style: {
+                                    ...child.props.style,
+                                    pointerEvents: "auto"
+                                }
+                            })
+                        )}
+                    </div>
 
-    <div style={{...props.style, overflow: "hidden", width:"100%", height: "100%"}} >
-        <div style={{position: "relative", height: "100%"}}>
+                    <div
+                        ref={(node) => {
+                            if (!node) return;
 
-            {/*Div for map to render*/}
-            <div ref={ref} style={{position: "absolute", left: 0, top: 0, right: 0, bottom:0, overflow: "hidden"}}></div>
+                            if (initialized) return;
+                            initialized = true;
 
-            {/*Div for panels and other custom elements*/}
-            <div style={{position: "absolute", left:0, top:0,right:0, bottom:0, pointerEvents: "none", zIndex: 500}}>
-                {Children.map(props.children, (child : any, i)=>
-                  cloneElement(
-                    child,
-                    { style: { ...child.props.style, pointerEvents: "auto"}}
-                  )
-                )}
+                            if (ref.current === null) return;
+                            onMountChange(ref.current);
+                        }}
+                    />
+                </div>
             </div>
-
-            <div ref={(node)=>{
-              if(!node) return;
-
-              if(initialized) return;
-              initialized = true;
-
-              if(ref.current === null) return;
-              onMountChange(ref.current);
-            }}/>
-
-        </div>
-    </div>
-  )};
+        );
+    };
 }

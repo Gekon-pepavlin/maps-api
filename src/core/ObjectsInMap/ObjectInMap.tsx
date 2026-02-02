@@ -1,23 +1,27 @@
-import { v4 as uuid } from 'uuid';
-import { LocationPoint } from '../LocationPoint';
-import { defaultMapObjectProps } from '../MapObjectProps';
+import { v4 as uuid } from "uuid";
+import { LocationPoint } from "../LocationPoint";
+import { defaultMapObjectProps } from "../MapObjectProps";
 
 export type MapOptions = L.Map;
 
-export interface ObjectInMapProps{
+export interface ObjectInMapProps {
     useAverageLocation: boolean;
 }
 
 const defaultObjectInMapProps: ObjectInMapProps = {
     useAverageLocation: true
-}
+};
 
-type EventName = "activechange" | "childrenchange" | "locationchange"
-                | "click" | "mouseover" | "mouseleave";
-export default class ObjectInMap{
+type EventName =
+    | "activechange"
+    | "childrenchange"
+    | "locationchange"
+    | "click"
+    | "mouseover"
+    | "mouseout";
+export class ObjectInMap {
     name: string;
     id: string;
-
 
     parent: ObjectInMap | undefined;
     protected children: ObjectInMap[] = [];
@@ -30,19 +34,23 @@ export default class ObjectInMap{
     isActive: boolean = true;
     isInitialized: boolean = false;
 
+    private eventCallbacks: Record<string, ((e: any) => void)[]> = {};
 
-    private eventCallbacks: Record<string, ((e: any)=>void)[]> = {};
-
-
-    get hasParent(){
-        return this.parent !== undefined
+    get hasParent() {
+        return this.parent !== undefined;
     }
-    
+
     private dontForgetTimeout: NodeJS.Timeout | undefined;
 
-    constructor(map: MapOptions, name: string = "MapObject", options? : Partial<ObjectInMapProps>){
-
-        const props : ObjectInMapProps = {...defaultObjectInMapProps, ...options};
+    constructor(
+        map: MapOptions,
+        name: string = "MapObject",
+        options?: Partial<ObjectInMapProps>
+    ) {
+        const props: ObjectInMapProps = {
+            ...defaultObjectInMapProps,
+            ...options
+        };
         this.useAverageLocation = props.useAverageLocation;
 
         this.name = name;
@@ -52,121 +60,137 @@ export default class ObjectInMap{
         this.map = map;
         this.setMap(map);
 
-
-
-
-        this.location = [0,0];
+        this.location = [0, 0];
 
         this.setDontForgetTimeout();
-        
     }
 
-    private setDontForgetTimeout(){
-        this.dontForgetTimeout = setTimeout(()=>{
-            if(!this.isInitialized) 
-                console.warn("Don't forget to call initialize() on", this.name, "object. \n" +
-                "It's possible that it contains children that are not initialized yet.")
-        }, 5000)
+    private setDontForgetTimeout() {
+        this.dontForgetTimeout = setTimeout(() => {
+            if (!this.isInitialized)
+                console.warn(
+                    "Don't forget to call initialize() on",
+                    this.name,
+                    "object. \n" +
+                        "It's possible that it contains children that are not initialized yet."
+                );
+        }, 5000);
     }
 
-    toString(){
-        return this.name
+    toString() {
+        return this.name;
     }
 
-    getLocation(){
+    getLocation() {
         return this.location;
     }
 
-    setLocation(location: LocationPoint){
-        if(this.location[0] === location[0] && this.location[1] === location[1]) return;
-        
-        this.location = location
+    setLocation(location: LocationPoint) {
+        if (
+            this.location[0] === location[0] &&
+            this.location[1] === location[1]
+        )
+            return;
+
+        this.location = location;
         this.callEventCallback("locationchange", this.location);
         this.parent?.recalculateLocation();
     }
 
-    protected setMap(map: L.Map){
+    protected setMap(map: L.Map) {
         this.map = map;
     }
-    protected add(child: ObjectInMap | ObjectInMap[]){
-        if(child instanceof Array){
-            child.forEach( (c)=>{
+    protected add(child: ObjectInMap | ObjectInMap[]) {
+        if (child instanceof Array) {
+            child.forEach((c) => {
                 this._add(c);
-            })
-        }else{
+            });
+        } else {
             this._add(child);
         }
     }
-    private _add(child: ObjectInMap){
-        if(this.isInitialized && !child.isInitialized){
+    private _add(child: ObjectInMap) {
+        if (this.isInitialized && !child.isInitialized) {
             this.isInitialized = false;
             this.setDontForgetTimeout();
         }
         this.children.push(child);
         child._setParent(this);
 
-        this.recalculateLocation()
+        this.recalculateLocation();
         this.callEventCallback("childrenchange", this.children);
-
     }
-    protected remove(child: ObjectInMap){
+    protected remove(child: ObjectInMap) {
         const index = this.children.indexOf(child);
-        if(index>=0){
-            this.children[index].parent = undefined
+        if (index >= 0) {
+            this.children[index].parent = undefined;
             // remove from array
             this.children.splice(index, 1);
-
-        }else{
-            console.log("Child not found.")
+        } else {
+            console.log("Child not found.");
         }
 
-        this.recalculateLocation()
+        this.recalculateLocation();
         this.callEventCallback("childrenchange", this.children);
-
     }
 
-    protected recalculateLocation(children?: LocationPoint[]){
-        if(!children) children = this.children.map( (child)=>{
-            return child.getLocation();
-        });
-        if(children.length==0) return;
+    protected recalculateLocation(children?: LocationPoint[]) {
+        if (!children)
+            children = this.children.map((child) => {
+                return child.getLocation();
+            });
+        if (children.length == 0) return;
 
-        if(!this.useAverageLocation){
-            const middleObject = children[Math.floor(children.length/2)];
-            const location = middleObject;
-            this.setLocation(location);
-            return;
-        }
+        let sum = { lat: 0, lng: 0 };
 
-        let sum = {lat: 0, lng: 0};
-
-        children.forEach( (location: LocationPoint)=>{
+        children.forEach((location: LocationPoint) => {
             sum.lat += location[0];
             sum.lng += location[1];
-        }
-        );
+        });
         sum.lat = sum.lat / children.length;
         sum.lng = sum.lng / children.length;
 
-        const finalLocation = [sum.lat, sum.lng];
+        let finalLocation: LocationPoint = [sum.lat, sum.lng];
 
-        if(this.location[0] === finalLocation[0] && this.location[1] === finalLocation[1]) return;
+        if (!this.useAverageLocation) {
+            // Find the closest point to the final location
+            let closest = children[0];
+            let closestDistance = Math.sqrt(
+                Math.pow(finalLocation[0] - closest[0], 2) +
+                    Math.pow(finalLocation[1] - closest[1], 2)
+            );
+            for (let i = 1; i < children.length; i++) {
+                const child = children[i];
+                const distance = Math.sqrt(
+                    Math.pow(finalLocation[0] - child[0], 2) +
+                        Math.pow(finalLocation[1] - child[1], 2)
+                );
+                if (distance < closestDistance) {
+                    closest = child;
+                    closestDistance = distance;
+                }
+            }
 
-        this.setLocation([sum.lat, sum.lng]);
+            finalLocation = closest;
+        }
+
+        if (
+            this.location[0] === finalLocation[0] &&
+            this.location[1] === finalLocation[1]
+        )
+            return;
+
+        this.setLocation(finalLocation);
     }
 
-    private _setParent(parent?: ObjectInMap){
-        if(!parent){
+    private _setParent(parent?: ObjectInMap) {
+        if (!parent) {
             console.log("Parent is undefined");
             return;
-        }
-
-        else if(this.parent === parent){
+        } else if (this.parent === parent) {
             return;
-        }
-        
-        else if(this.hasParent){
-            this.parent?.remove(this)
+        } else if (this.hasParent) {
+            this.parent?.remove(this);
         }
 
         clearTimeout(this.dontForgetTimeout);
@@ -174,10 +198,10 @@ export default class ObjectInMap{
         this.parent = parent;
         this.parent.setMap(this.map);
     }
-    protected setParent(parent?: ObjectInMap){
+    protected setParent(parent?: ObjectInMap) {
         this._setParent(parent);
 
-        if(!this.parent){
+        if (!this.parent) {
             console.log("Parent is undefined");
             return;
         }
@@ -185,77 +209,81 @@ export default class ObjectInMap{
         this.parent.add(this);
     }
 
-    addListener(event: EventName, callback: (e: any)=>void, callOnAdd: boolean = false){
-        if(!this.eventCallbacks[event]) this.eventCallbacks[event] = [];
+    addListener(
+        event: EventName,
+        callback: (e: any) => void,
+        callOnAdd: boolean = false
+    ) {
+        if (!this.eventCallbacks[event]) this.eventCallbacks[event] = [];
         this.eventCallbacks[event].push(callback);
 
-        if(callOnAdd) this.callEventCallback(event, null);
+        if (callOnAdd) this.callEventCallback(event, null);
     }
 
-    callEventCallback(event: EventName, e: any){
-        if(!this.eventCallbacks[event]) return;
-        this.eventCallbacks[event].forEach( (callback)=>{
+    callEventCallback(event: EventName, e: any) {
+        if (!this.eventCallbacks[event]) return;
+        this.eventCallbacks[event].forEach((callback) => {
             callback(e);
-        })
+        });
     }
 
-
-
-    setActive(isActive: boolean, force: boolean = false, ignoreChildren = false) : any{
-        if(!this.map){
-            console.log("Cannot change active property because map is not attached");
+    setActive(
+        isActive: boolean,
+        force: boolean = false,
+        ignoreChildren = false
+    ): any {
+        if (!this.map) {
+            console.log(
+                "Cannot change active property because map is not attached"
+            );
             return;
-        };
-        if(!force && isActive === this.isActive) return;
+        }
+        if (!force && isActive === this.isActive) return;
         this.isActive = isActive;
 
-        if(!ignoreChildren){
-            this.children.forEach( (child)=>{
+        if (!ignoreChildren) {
+            this.children.forEach((child) => {
                 child.setActive(isActive, force);
             });
         }
 
-        if(this.hasParent) this.parent?.onChildrenActiveChange();
+        if (this.hasParent) this.parent?.onChildrenActiveChange();
 
         this.callEventCallback("activechange", this.isActive);
         return true;
     }
 
-    removeListener(event: EventName, callback: (e: any)=>void){
-        if(!this.eventCallbacks[event]) return;
+    removeListener(event: EventName, callback: (e: any) => void) {
+        if (!this.eventCallbacks[event]) return;
 
         const index = this.eventCallbacks[event].indexOf(callback);
-        if(index>=0){
+        if (index >= 0) {
             this.eventCallbacks[event].splice(index, 1);
         }
     }
 
-
-    
-    protected onChildrenActiveChange(){
+    protected onChildrenActiveChange() {
         let allSame = true;
         let first = true;
-        let lastIsActive : boolean = true;
+        let lastIsActive: boolean = true;
 
-        for(let i=0; i<this.children.length; i++){
+        for (let i = 0; i < this.children.length; i++) {
             const l = this.children[i];
 
-
-            if(!first && lastIsActive != l.isActive) allSame = false;
+            if (!first && lastIsActive != l.isActive) allSame = false;
 
             first = false;
             lastIsActive = l.isActive;
         }
 
-        if(!first && allSame) this.setActive(lastIsActive)
-        
+        if (!first && allSame) this.setActive(lastIsActive);
     }
 
-    initialize(){
+    initialize() {
         const inMap = this.isInitialized;
 
-        this.children.forEach( (child)=>{
-            if(!child.isInitialized) child.initialize();
+        this.children.forEach((child) => {
+            if (!child.isInitialized) child.initialize();
         });
 
         clearTimeout(this.dontForgetTimeout);
@@ -264,15 +292,17 @@ export default class ObjectInMap{
         // return inMap !== this.isInitialized;
         return this;
     }
-    delete(){
-        if(this.hasParent) this.parent?.remove(this);
-        this.children.forEach( (child)=>{
+    delete() {
+        if (this.hasParent) this.parent?.remove(this);
+
+        const childrenArr = [...this.children];
+        childrenArr.forEach((child) => {
             child.delete();
-        })
+        });
         this.isInitialized = false;
     }
 
-    setUseAverageLocation(useAverageLocation: boolean){
+    setUseAverageLocation(useAverageLocation: boolean) {
         this.useAverageLocation = useAverageLocation;
         this.recalculateLocation();
     }

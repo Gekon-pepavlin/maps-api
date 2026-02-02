@@ -1,17 +1,20 @@
 import L from "leaflet";
 import { LocationPoint } from "./LocationPoint";
-import Marker from "./ObjectsInMap/Marker";
+import { Marker } from "./ObjectsInMap/Marker";
 import { MapOptions, ObjectInMapProps } from "./ObjectsInMap/ObjectInMap";
-import Geometry, { GeometryType } from "./ObjectsInMap/Geometry";
-import GeometryMarker from "./ObjectsInMap/GeometryMarker";
-import MarkerLayer from "./ObjectsInMap/MarkerLayer";
-import ClusterMarkerLayer, { ClusterMarkerLayerProps } from "./ObjectsInMap/ClusterMarkerLayer";
+import { Geometry, GeometryType } from "./ObjectsInMap/Geometry";
+import { GeometryMarker } from "./ObjectsInMap/GeometryMarker";
+import { MarkerLayer } from "./ObjectsInMap/MarkerLayer";
+import {
+    ClusterMarkerLayer,
+    ClusterMarkerLayerProps
+} from "./ObjectsInMap/ClusterMarkerLayer";
 import { MapObjectProps, defaultMapObjectProps } from "./MapObjectProps";
 
-export default class MapObject{
+export class MapObject {
     private projection: L.CRS;
     private transform: (location: LocationPoint) => LocationPoint;
-    private maxZoom : number;
+    private maxZoom: number;
 
     private props: MapObjectProps;
 
@@ -20,14 +23,14 @@ export default class MapObject{
 
     initialized = false;
     public map: L.Map = undefined as any;
-    constructor(props: MapObjectProps){
+    constructor(props: MapObjectProps) {
         this.projection = props.projection.crs;
         this.transform = props.projection.transform;
 
         // @ts-ignore
-        if(!this.projection.options){
+        if (!this.projection.options) {
             this.maxZoom = 18;
-        }else{
+        } else {
             // @ts-ignore
             this.maxZoom = this.projection.options.resolutions.length - 2;
         }
@@ -35,140 +38,189 @@ export default class MapObject{
         this.props = props;
     }
 
-
-    public addListener(event: Partial<MapObjectCallbacks>){
-
-        if(!this.map){
+    public addListener(event: Partial<MapObjectCallbacks>) {
+        if (!this.map) {
             this.notAddedCallbacks.push(event);
             return;
-        }else{
+        } else {
             this.callbacks.push(event);
         }
-        this.map.on("zoomend", ()=>{
-            this.callbacks.forEach(element => {
+        this.map.on("zoomend", () => {
+            this.callbacks.forEach((element) => {
                 element.onZoomChange?.(this.map.getZoom());
             });
-            
-        })
-
+        });
     }
 
-    public removeListener(event: Partial<MapObjectCallbacks>){
-        this.callbacks = this.callbacks.filter((e)=>e !== event);
-
-
+    public removeListener(event: Partial<MapObjectCallbacks>) {
+        this.callbacks = this.callbacks.filter((e) => e !== event);
     }
 
-    private initialize(htmlElement: HTMLElement, callbacks: Partial<MapObjectCallbacks>){
-        try{
+    // Called in useMap...dont delete
+    private initialize(
+        htmlElement: HTMLElement,
+        callbacks: Partial<MapObjectCallbacks>
+    ) {
+        try {
             const newMap = L.map(htmlElement, {
                 zoomControl: false,
                 crs: this.projection,
-                maxZoom: this.maxZoom , // Because of the bug
-    
+                maxZoom: this.maxZoom, // Because of the bug,
+                attributionControl: false
             });
-            newMap.setView(this.props.startLocation, this.maxZoom/2);
-            
-    
-            L.tileLayer.wms("https://geoportal.cuzk.cz/WMS_ORTOFOTO_PUB/WMService.aspx", {
-                layers: "GR_ORTFOTORGB",
-                maxZoom : this.maxZoom, 
-                styles: "",
-                format: "image/png",
-                transparent: true,
-                version: "1.3.0",
-                attribution: "ČÚZK"
-            }).addTo(newMap);
+            newMap.setView(this.props.startLocation, this.maxZoom / 2);
 
+            L.tileLayer
+                .wms(
+                    "https://ags.cuzk.gov.cz/arcgis1/services/ORTOFOTO/MapServer/WMSServer",
+                    {
+                        layers: "0",
+                        maxZoom: this.maxZoom,
+                        format: "image/png",
+                        transparent: true,
+                        version: "1.3.0",
+                        attribution: "ČÚZK"
+                    }
+                )
+                .addTo(newMap);
 
             this.map = newMap;
-        }catch(e){
+        } catch (e) {
             console.error(e);
         }
-
 
         this.initialized = true;
 
         this.initializeCallbacks(callbacks);
-
     }
-    private initializeCallbacks(callbacks: Partial<MapObjectCallbacks>){
-        
+    private initializeCallbacks(callbacks: Partial<MapObjectCallbacks>) {
         this.addListener(callbacks);
 
-        this.notAddedCallbacks.forEach((e)=>{
+        this.notAddedCallbacks.forEach((e) => {
             this.addListener(e);
-        })
+        });
         this.notAddedCallbacks = [];
-        
-        this.callbacks.forEach(element => {
+
+        this.callbacks.forEach((element) => {
             element.onLoad?.(this);
         });
     }
 
-    private checkIfInitialized(){
-        if(!this.initialized){
+    private checkIfInitialized() {
+        if (!this.initialized) {
             throw new Error("Map is not initialized yet. Try to use useMap.");
         }
     }
 
+    addTileLayer(layer: L.TileLayer) {
+        this.checkIfInitialized();
+        layer.addTo(this.map);
+    }
 
-    createMarker = (location: LocationPoint, marker: (marker: Marker, map: MapOptions)=>React.ReactElement, options?: Partial<ObjectInMapProps>) => {
+    removeTileLayer(layer: L.TileLayer) {
+        this.checkIfInitialized();
+        layer.remove();
+    }
+
+    setTileLayer(layer: L.TileLayer) {
+        this.checkIfInitialized();
+        this.map.eachLayer((layer) => {
+            if (layer instanceof L.TileLayer) {
+                layer.remove();
+            }
+        });
+        layer.addTo(this.map);
+    }
+
+    createMarker = (
+        location: LocationPoint,
+        marker: (marker: Marker, map: MapOptions) => React.ReactElement,
+        options?: Partial<ObjectInMapProps>
+    ) => {
         this.checkIfInitialized();
 
         const loc = this.transform(location);
-        const m = new Marker(loc[0], loc[1], marker, this.map, undefined, options) ;
+        const m = new Marker(
+            loc[0],
+            loc[1],
+            marker,
+            this.map,
+            undefined,
+            options
+        );
         return m;
-    }
+    };
 
-    createGeometry = (points: LocationPoint[][], type : GeometryType, options?: Partial<ObjectInMapProps>) => {
+    createGeometry = (
+        points: LocationPoint[][],
+        type: GeometryType,
+        options?: Partial<ObjectInMapProps>
+    ) => {
         this.checkIfInitialized();
 
-        const m = new Geometry(points.map((p)=>{
-            return p.map((p)=>{
-                const loc = this.transform(p);
-                return [loc[0], loc[1]];
-            })
-        }), type, this.map, undefined, options);
+        const m = new Geometry(
+            points.map((p) => {
+                return p.map((p) => {
+                    const loc = this.transform(p);
+                    return [loc[0], loc[1]];
+                });
+            }),
+            type,
+            this.map,
+            undefined,
+            options
+        );
         return m;
-    }
+    };
 
-    createGeometryMarker = (points: LocationPoint[][], type: GeometryType, marker: (marker: GeometryMarker, map: MapOptions)=>React.ReactElement, options?: Partial<ObjectInMapProps>) => {
+    createGeometryMarker = (
+        points: LocationPoint[][],
+        type: GeometryType,
+        marker: (marker: GeometryMarker, map: MapOptions) => React.ReactElement,
+        options?: Partial<ObjectInMapProps>
+    ) => {
         this.checkIfInitialized();
-        const m = new GeometryMarker(points.map((p)=>{
-            return p.map((p)=>{
-                const loc = this.transform(p);
-                return [loc[0], loc[1]];
-            })
-        }), type, marker, this.map, undefined, options) ;
+        const m = new GeometryMarker(
+            points.map((p) => {
+                return p.map((p) => {
+                    const loc = this.transform(p);
+                    return [loc[0], loc[1]];
+                });
+            }),
+            type,
+            marker,
+            this.map,
+            undefined,
+            options
+        );
         return m;
-    }
+    };
 
     createLayer = (options?: Partial<ObjectInMapProps>) => {
         this.checkIfInitialized();
         const l = new MarkerLayer(this.map, options);
         return l;
+    };
 
-    }
-
-    createClusterLayer = (element: (count: number)=>React.ReactElement, options?: Partial<ClusterMarkerLayerProps>) => {
+    createClusterLayer = (
+        element: (count: number) => React.ReactElement,
+        options?: Partial<ClusterMarkerLayerProps>
+    ) => {
         this.checkIfInitialized();
         const l = new ClusterMarkerLayer(element, this.map, options);
         return l;
-    }
+    };
 }
 
-export interface MapObjectCallbacks{
-    onLoad: (map: MapObject)=>void,
-    onZoomChange: (zoom: number)=>void,
-
+export interface MapObjectCallbacks {
+    onLoad: (map: MapObject) => void;
+    onZoomChange: (zoom: number) => void;
 }
 
-
-export function createMap(props: Partial<MapObjectProps>) : MapObject{
+export function createMap(props: Partial<MapObjectProps>): MapObject {
     const propsWithDefaults = {
         ...defaultMapObjectProps,
-        ...props,
-    }
+        ...props
+    };
     return new MapObject(propsWithDefaults);
 }
